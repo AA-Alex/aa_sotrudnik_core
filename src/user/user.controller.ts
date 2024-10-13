@@ -20,7 +20,7 @@ export class UsersController {
     return this.usersService.create(data);
   }
 
-  @Post('update-user-token')
+  @Post('recreate-user-token')
   async recreateUserToken(@Req() request: Request, @Body(new ValidationPipe()) data: RecreateUserTokenDto): Promise<{ is_ok: boolean }> {
 
     const isOk = await this.usersService.recreateUserToken(data.user_id);

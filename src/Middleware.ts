@@ -27,7 +27,7 @@ export function faAuthSysMiddleware(level: number): any {
                     respStatus = 500; // Всё сломалось
                 }
 
-                if (!((userData?.lvl >= (level ?? 0)) || (level === 100))) {
+                if (!((userData?.lvl >= (level ?? 0)) || (userData?.lvl === 100))) {
                     respStatus = 403 // Нехватает прав TODO приделать роль
                 }
             }
@@ -71,7 +71,7 @@ export default class Middleware {
             // TODO перепилить на нест и приделать проверку на существование пользователя
             // Приделать кеш KeyDB
 
-            if (!((userData?.lvl >= (iNeedLvl ?? 0)) || (iNeedLvl === 100))) {
+            if (!((userData?.lvl >= (iNeedLvl ?? 0)) || (userData?.lvl === 100))) {
                 resp.message = 'Ошибка доступа';
             }
         }
