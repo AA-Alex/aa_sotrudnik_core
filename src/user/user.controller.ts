@@ -3,11 +3,16 @@ import { UsersService } from './user.service';
 import { User } from './user.entity';
 import { AccessLevelT, RecreateUserTokenDto, updateUserPasswordDto, UserCreateDto } from './user.dto';
 import AuthSysMiddleware from 'src/Middleware';
+import ContextClass from 'src/main';
 
 @Controller('user')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService
+  ) {}
+
   private authMiddleware = new AuthSysMiddleware();
+  private contextClass = new ContextClass();
 
   @Post('register')
   async create(@Req() request: Request, @Body(new ValidationPipe()) data: UserCreateDto,): Promise<string> {
@@ -15,7 +20,7 @@ export class UsersController {
     return this.usersService.create(data);
   }
 
-  @Post('recreate-user-token')
+  @Post('update-user-token')
   async recreateUserToken(@Req() request: Request, @Body(new ValidationPipe()) data: RecreateUserTokenDto): Promise<{ is_ok: boolean }> {
 
     const isOk = await this.usersService.recreateUserToken(data.user_id);
@@ -25,7 +30,7 @@ export class UsersController {
   @Post('update_user_password')
   async updateUserPassword(@Req() request: Request, @Body(new ValidationPipe()) data: updateUserPasswordDto): Promise<{ is_ok: boolean, error_message: string }> {
     let resp = { is_ok: false, error_message: 'ошибка доступа' };
-    const vAccessCheck = await this.authMiddleware.AuthSysMiddleware(request, AccessLevelT.root);
+    const vAccessCheck = await this.authMiddleware.AuthSysMiddleware2(request, AccessLevelT.root);
     if (vAccessCheck.is_ok) {
       resp.is_ok = await this.usersService.updateUserPassword(data);
       resp.error_message = 'no error';
@@ -35,16 +40,12 @@ export class UsersController {
   }
 
   @Post('list-all-user')
-  async listAllUser(@Req() request: Request): Promise<{ list_user: User[], error_message: string }> {
-    let resp = { list_user: [], error_message: 'ошибка доступа' };
-    const vAccessCheck = await this.authMiddleware.AuthSysMiddleware(request)
+  async listAllUser(@Req() request: Request): Promise<{ list_user: User[] }> {
+    const aUser = await this.usersService.listAllUser();
 
-    if (vAccessCheck.is_ok) {
-      resp.list_user = await this.usersService.listAllUser();
-      resp.error_message = 'no error';
-    }
+    console.log('aUser :>> ', aUser);
 
-    return resp;
+    return { list_user: aUser };
   }
 
 }

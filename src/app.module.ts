@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/user.entity';
 import { UsersModule } from './user/user.module';
@@ -23,4 +23,5 @@ import { AppService } from './app.service';
   providers: [AppService],
 
 })
-export class AppModule {}
+export class AppModule {
+}

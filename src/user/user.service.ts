@@ -21,7 +21,7 @@ export class UsersService {
   private createNewToken = (id: number, lvl: number) => {
 
     const payload = { id, lvl }
-    return jwt.sign(payload, secret, { expiresIn: '7d' });
+    return jwt.sign(payload, secret, { expiresIn: '356d' }); // Токен на год, пока для всех
   }
 
   /**
@@ -95,6 +95,7 @@ export class UsersService {
       if (sNewToken) {
 
         const vUpdateResult = await this.usersRepository.update(idUser, { token: sNewToken });
+
         if (vUpdateResult) {
           isOk = true;
         }
