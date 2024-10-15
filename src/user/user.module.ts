@@ -16,7 +16,12 @@ export class UsersModule implements NestModule {
     consumer
       .apply(faAuthSysMiddleware(100))
       .forRoutes('user/list-all-user');
+
+    consumer
+      .apply(faAuthSysMiddleware(0))
+      .forRoutes('user/login');
   }
+
 }
 
 

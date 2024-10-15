@@ -9,7 +9,6 @@ export enum AccessLevelT {
     registered = 1, // зарегистрирован
 }
 
-
 /**
  * Тип для регистрации пользователя
  */
@@ -47,4 +46,3 @@ export class updateUserPasswordDto {
     @MaxLength(20)
     pswd: string;
 }
-

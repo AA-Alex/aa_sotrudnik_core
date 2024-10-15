@@ -30,17 +30,25 @@ export function faAuthSysMiddleware(level: number): any {
                 if (!((userData?.lvl >= (level ?? 0)) || (userData?.lvl === 100))) {
                     respStatus = 403 // Нехватает прав TODO приделать роль
                 }
+            } else if (level === 0) {
+                respStatus = 200;
             }
 
-            resp.sendStatus(respStatus);
-            // resp.setHeader('Content-Type', 'application/json');
-            next();
+
+            resp.status(respStatus)
+
+            if (respStatus === 200) {
+                next();
+            } else {
+                resp.send('Ошибка доступа');
+            }
 
         }
     }
 
     return mixin(Middleware)
 }
+
 
 export default class Middleware {
 

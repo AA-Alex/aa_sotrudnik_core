@@ -35,7 +35,7 @@ export class UsersService {
     if (vExistUser) {
       sResponse = 'Пользователь с таким логином уже существует'
     } else {
-      param.access_lvl = 0;
+      param.access_lvl = 1;
       param.pswd = bcrypt.hashSync(param.pswd, 13);
       const user = this.usersRepository.create(param);
 
@@ -105,4 +105,31 @@ export class UsersService {
 
     return isOk;
   }
+
+  /**
+   * LogIn
+   */
+  public async logIn(data: { login: string, pswd: string }): Promise<string> {
+    let isCanLogin = false;
+    let sToken = 'ERROR';
+
+    // Получить инфо пользователя
+    const userInfo = await this.usersRepository.findOneBy({ login: data.login });
+
+    if (userInfo?.id && userInfo.pswd) {
+      // Если пароль совпадает
+      isCanLogin = await bcrypt.compare(data.pswd, userInfo.pswd);
+    }
+
+    if (isCanLogin && userInfo.token) {
+      sToken = userInfo.token;
+    } else if (isCanLogin) {
+
+      sToken = this.createNewToken(userInfo.id, userInfo.access_lvl);
+      await this.usersRepository.update(userInfo.id, { token: sToken });
+    }
+
+    return sToken;
+  }
+
 }

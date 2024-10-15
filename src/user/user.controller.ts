@@ -15,9 +15,15 @@ export class UsersController {
   private contextClass = new ContextClass();
 
   @Post('register')
-  async create(@Req() request: Request, @Body(new ValidationPipe()) data: UserCreateDto,): Promise<string> {
+  async register(@Req() request: Request, @Body(new ValidationPipe()) data: UserCreateDto,): Promise<string> {
 
     return this.usersService.create(data);
+  }
+
+  @Post('login')
+  async login(@Req() request: Request, @Body(new ValidationPipe()) data: UserCreateDto,): Promise<string> {
+
+    return this.usersService.logIn(data);
   }
 
   @Post('recreate-user-token')
@@ -42,8 +48,6 @@ export class UsersController {
   @Post('list-all-user')
   async listAllUser(@Req() request: Request): Promise<{ list_user: User[] }> {
     const aUser = await this.usersService.listAllUser();
-
-    console.log('aUser :>> ', aUser);
 
     return { list_user: aUser };
   }
