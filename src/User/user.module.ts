@@ -1,17 +1,18 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, NestModule, Provider } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './user.controller';
 import { UsersService } from './user.service';
-import { User } from './user.entity';
+import { User } from './Entity/user.entity';
+import { UserInfo } from './Entity/user_info.entity';
 import { faAuthSysMiddleware } from 'src/Middleware';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [TypeOrmModule.forFeature([User, UserInfo,])],
   controllers: [UsersController],
   providers: [UsersService],
 })
 
-export class UsersModule implements NestModule {
+export class UserModule implements NestModule {
   public configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(faAuthSysMiddleware(100))
@@ -20,6 +21,10 @@ export class UsersModule implements NestModule {
     consumer
       .apply(faAuthSysMiddleware(0))
       .forRoutes('user/login');
+
+    consumer
+      .apply(faAuthSysMiddleware(1))
+      .forRoutes('user/update-user-password');
   }
 
 }

@@ -1,9 +1,10 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './user/user.entity';
-import { UsersModule } from './user/user.module';
+import { User } from './User/Entity/user.entity';
+import { UserModule } from './User/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UserInfo } from './User/Entity/user_info.entity';
 
 @Module({
   imports: [
@@ -14,10 +15,11 @@ import { AppService } from './app.service';
       username: 'alex',
       password: '123',
       database: 'postgres',
-      entities: [User],
+      entities: [User, UserInfo],
       synchronize: true,
     }),
-    UsersModule,
+
+    UserModule
   ],
   controllers: [AppController],
   providers: [AppService],

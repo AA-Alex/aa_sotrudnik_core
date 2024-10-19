@@ -1,39 +1,75 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
-import { updateUserPasswordDto, UserCreateDto } from './user.dto';
+import { User } from './Entity/user.entity';
+import { updateUserPasswordDto, UserCreateDto } from './Dto/user.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { ctx } from 'src/main';
 
 export const secret = 'lsФмъ\\dk*&^счмисмч&*Tjh;(*jkjlo]орориваfJHjhs'; // TODO вынести в конфиг
 
 @Injectable()
 export class UsersService {
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+
   ) {}
 
   /**
    * Создание токена для авторизации
    */
   private createNewToken = (id: number, lvl: number) => {
-
     const payload = { id, lvl }
-    return jwt.sign(payload, secret, { expiresIn: '356d' }); // Токен на год, пока для всех
+    return jwt.sign(payload, secret, { expiresIn: '3650' }); // Токен на 10 лет, пока для всех
   }
 
   /**
-   * Создать пользователя
+* Пересоздать токен
+*/
+  async createRootUser(): Promise<string> {
+
+    let message = 'не удалось создать root пользователя';
+
+    const vExistUser = await this.usersRepository.findOneBy({ login: 'alex' });
+
+    if (vExistUser) {
+      message = 'root пользователь уже существует, удаление возможно только вручную из БД';
+
+    } else {
+      const pswd = bcrypt.hashSync('123');
+      const vUser = this.usersRepository.create({ login: 'alex', access_lvl: 100, pswd });
+
+      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
+
+      const vUpdateResult = await this.usersRepository.save(vUser);
+
+      if (vUser && vUpdateResult) {
+        message = 'root пользователь создан >>> ОБЯЗАТЕЛЬНО СМЕНИТЕ ПАРОЛЬ В МЕТОДЕ user/update-user-password<<<'
+      }
+    }
+
+    return message;
+  }
+
+
+  /**
+   * Регистрация пользователя
    */
-  async create(param: UserCreateDto): Promise<string> {
+  async register(param: UserCreateDto): Promise<string> {
     param.login = param.login.toLowerCase();
     let sResponse = 'Ошибка при создании пользователя';
 
-    const vExistUser = await this.usersRepository.findOneBy({ login: param.login })
+    let vExistUser = await this.usersRepository.findOneBy({ login: param.login });
     if (vExistUser) {
       sResponse = 'Пользователь с таким логином уже существует'
+      vExistUser = await this.usersRepository.findOneBy({ email: param.login });
+
+    } else if (vExistUser) {
+      sResponse = 'Пользователь с email логином уже существует';
+
     } else {
       param.access_lvl = 1;
       param.pswd = bcrypt.hashSync(param.pswd, 13);
@@ -49,37 +85,45 @@ export class UsersService {
   }
 
   /**
-   * Получить всех пользователей
-   * TODO пока в БД мало данные - будет работать, потом добавить пагинацию
-   */
-  async listAllUser(): Promise<User[]> {
-    return await this.usersRepository.find({});
-  }
-
-  /**
    * Обновить пароль пользователю
    */
-  async updateUserPassword(param: updateUserPasswordDto): Promise<boolean> {
-    const vUser = await this.usersRepository.findOneBy({ id: param.user_id });
-    let isOk = false
+  async updateUserPassword(param: updateUserPasswordDto): Promise<{ is_ok: boolean, message: string, token: string }> {
 
-    if (vUser) {
+    let isOk = false;
+    let sMessage = 'Не удалось сменить пароль';
+    let sNewToken = '';
+
+    const idUser = ctx.userSys.user_id;
+
+    if (!ctx.userSys.user_id) {
+      throw new Error('Текущий пользователь не опознан');
+    }
+
+    const vUser = await this.usersRepository.findOneBy({ id: idUser });
+
+    if (!param.is_ok) {
+      sMessage = 'Не получено согласие от пользователя';
+
+    } else if (vUser) {
 
       const sNewPswd = bcrypt.hashSync(param.pswd, 13);
 
-      const sNewToken = this.createNewToken(param.user_id, vUser.access_lvl);
+      sNewToken = this.createNewToken(idUser, vUser.access_lvl);
 
       if (sNewToken) {
 
-        const vUpdateResult = await this.usersRepository.update(param.user_id, { token: sNewToken, pswd: sNewPswd });
+        const vUpdateResult = await this.usersRepository.update(idUser, { token: sNewToken, pswd: sNewPswd });
+
+
         if (vUpdateResult) {
           isOk = true;
+          sMessage = 'Пароль удачно обновлен'
         }
       }
 
     }
 
-    return isOk;
+    return { is_ok: isOk, message: sMessage, token: sNewToken };
   }
 
   /**

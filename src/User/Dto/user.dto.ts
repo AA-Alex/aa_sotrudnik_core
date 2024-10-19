@@ -1,4 +1,4 @@
-import { IsInt, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsBoolean, IsEmail, IsInt, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
 
 // Список уровней доступа дя пользователей
 export enum AccessLevelT {
@@ -19,6 +19,9 @@ export class UserCreateDto {
     @IsString()
     pswd: string;
 
+    @IsEmail()
+    email: string;
+
     access_lvl?: number;
     token?: string;
 
@@ -37,9 +40,7 @@ export class RecreateUserTokenDto {
  * Тип для обновления пароля пользователя
  */
 export class updateUserPasswordDto {
-    @IsInt()
-    @Min(1)
-    user_id: number
+    is_ok: boolean;
 
     @IsString()
     @MinLength(6)

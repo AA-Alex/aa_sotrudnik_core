@@ -1,10 +1,13 @@
 import * as jwt from 'jsonwebtoken';
-import { secret, UsersService } from './user/user.service';
 
 import { Injectable, mixin, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { secret } from './User/user.service';
+import { ctx } from './main';
 
-
+/**
+ * Мидлвар по уровню доступа
+ */
 export function faAuthSysMiddleware(level: number): any {
 
     @Injectable()
@@ -27,13 +30,12 @@ export function faAuthSysMiddleware(level: number): any {
                     respStatus = 500; // Всё сломалось
                 }
 
-                if (!((userData?.lvl >= (level ?? 0)) || (userData?.lvl === 100))) {
+                if (!((userData?.lvl >= (level ?? 0)) || (userData?.lvl === 100)) && respStatus !== 500) {
                     respStatus = 403 // Нехватает прав TODO приделать роль
                 }
             } else if (level === 0) {
                 respStatus = 200;
             }
-
 
             resp.status(respStatus)
 
@@ -42,50 +44,12 @@ export function faAuthSysMiddleware(level: number): any {
             } else {
                 resp.send('Ошибка доступа');
             }
-
+            ctx.userSys.user_id = userData?.id || 0
         }
     }
 
-    return mixin(Middleware)
+    return mixin(Middleware);
 }
 
-
-export default class Middleware {
-
-    constructor() {};
-
-    /**
-     * Дешифровка jwt токена по id пользователя и по уровню доступа пользователя
-     */
-    public async AuthSysMiddleware2(vApikey: any, iNeedLvl?: number): Promise<{ message: string, is_ok: boolean }> {
-        let userData: { id: number, lvl: number } = null;
-        let resp = { message: '', is_ok: false }
-
-        const sApikey = vApikey?.headers?.apikey
-
-        if (sApikey?.length) {
-            try {
-
-                userData = <{ id: number, lvl: number }>jwt.verify(sApikey, secret)
-
-                resp.is_ok = true;
-
-            } catch (e) {
-
-                resp.message = 'Ошибка авторизации';
-            }
-
-
-            // TODO перепилить на нест и приделать проверку на существование пользователя
-            // Приделать кеш KeyDB
-
-            if (!((userData?.lvl >= (iNeedLvl ?? 0)) || (userData?.lvl === 100))) {
-                resp.message = 'Ошибка доступа';
-            }
-        }
-
-        return resp;
-    }
-}
 
 

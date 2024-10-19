@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, Index } from 'typeorm';
 
 @Entity()
 export class User {
@@ -9,7 +9,12 @@ export class User {
   @Unique('uniq_login', ['login'])
   login: string;
 
+  @Column({ nullable: true })
+  @Unique('uniq_email', ['email'])
+  email: string;
+
   @Column()
+  @Index('pswd')
   pswd: string;
 
   @Column({ nullable: true })

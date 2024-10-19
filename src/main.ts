@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Injectable } from '@nestjs/common';
 
 
 async function bootstrap() {
@@ -11,13 +12,8 @@ async function bootstrap() {
 
 bootstrap();
 
-export default class ContextClass {
-
-  private ctx: any;
-
-  constructor() {
-    this.ctx = {
-      user_id: 0
-    }
+export const ctx = {
+  userSys: {
+    user_id: 0
   }
 }
