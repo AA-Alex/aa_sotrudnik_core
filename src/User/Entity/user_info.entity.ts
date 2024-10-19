@@ -12,7 +12,7 @@ export class UserInfo {
   @Column()
   @Unique('uniq_dispaly_name', ['dispaly_name'])
   @Index()
-  dispaly_name: string;
+  display_name: string;
 
   @Column({ default: '' })
   @Index()

@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsInt, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsEmail, IsInt, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
 
 // Список уровней доступа дя пользователей
 export enum AccessLevelT {

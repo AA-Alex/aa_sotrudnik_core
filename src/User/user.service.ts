@@ -6,6 +6,8 @@ import { updateUserPasswordDto, UserCreateDto } from './Dto/user.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { ctx } from 'src/main';
+import { UserInfo } from './Entity/user_info.entity';
+import { UpdateUserInfoDto } from './Dto/user_info.dto';
 
 export const secret = 'lsФмъ\\dk*&^счмисмч&*Tjh;(*jkjlo]орориваfJHjhs'; // TODO вынести в конфиг
 
@@ -14,7 +16,9 @@ export class UsersService {
 
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private userRepository: Repository<User>,
+    @InjectRepository(UserInfo)
+    private userInfoRepository: Repository<UserInfo>,
 
   ) {}
 
@@ -23,28 +27,28 @@ export class UsersService {
    */
   private createNewToken = (id: number, lvl: number) => {
     const payload = { id, lvl }
-    return jwt.sign(payload, secret, { expiresIn: '3650' }); // Токен на 10 лет, пока для всех
+    return jwt.sign(payload, secret, { expiresIn: '3650d' }); // Токен на 10 лет, пока для всех
   }
 
   /**
-* Пересоздать токен
-*/
+  * Создать рут пользователя
+  */
   async createRootUser(): Promise<string> {
 
     let message = 'не удалось создать root пользователя';
 
-    const vExistUser = await this.usersRepository.findOneBy({ login: 'alex' });
+    const vExistUser = await this.userRepository.findOneBy({ login: 'alex' });
 
     if (vExistUser) {
       message = 'root пользователь уже существует, удаление возможно только вручную из БД';
 
     } else {
-      const pswd = bcrypt.hashSync('123');
-      const vUser = this.usersRepository.create({ login: 'alex', access_lvl: 100, pswd });
+      const pswd = bcrypt.hashSync('123'); // TODO придумать пароль для прода
+      const vUser = this.userRepository.create({ login: 'alex', access_lvl: 100, pswd });
 
       vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
 
-      const vUpdateResult = await this.usersRepository.save(vUser);
+      const vUpdateResult = await this.userRepository.save(vUser);
 
       if (vUser && vUpdateResult) {
         message = 'root пользователь создан >>> ОБЯЗАТЕЛЬНО СМЕНИТЕ ПАРОЛЬ В МЕТОДЕ user/update-user-password<<<'
@@ -54,7 +58,6 @@ export class UsersService {
     return message;
   }
 
-
   /**
    * Регистрация пользователя
    */
@@ -62,10 +65,10 @@ export class UsersService {
     param.login = param.login.toLowerCase();
     let sResponse = 'Ошибка при создании пользователя';
 
-    let vExistUser = await this.usersRepository.findOneBy({ login: param.login });
+    let vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
       sResponse = 'Пользователь с таким логином уже существует'
-      vExistUser = await this.usersRepository.findOneBy({ email: param.login });
+      vExistUser = await this.userRepository.findOneBy({ email: param.login });
 
     } else if (vExistUser) {
       sResponse = 'Пользователь с email логином уже существует';
@@ -73,15 +76,63 @@ export class UsersService {
     } else {
       param.access_lvl = 1;
       param.pswd = bcrypt.hashSync(param.pswd, 13);
-      const user = this.usersRepository.create(param);
+      const vUser = await this.userRepository.save(param);
 
-      user.token = this.createNewToken(user.id, user.access_lvl);
-      await this.usersRepository.save(user);
+      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
+      await Promise.all([
+        this.userRepository.save(vUser),
+        this.userInfoRepository.create({ user_id: vUser.id, display_name: vUser.login }),
+      ])
 
       sResponse = 'Пользователь создан';
     }
 
     return sResponse;
+  }
+
+  /**
+   * Обновить инфо о пользователе
+   */
+  async updateUserInfo(param: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
+
+    let isOk = false;
+    let sMessage = 'Не удалось обновить информацию о пользователе';
+
+    const idUser = ctx.userSys.user_id;
+
+    if (!ctx.userSys.user_id) {
+      throw new Error('Текущий пользователь не опознан');
+    }
+
+    let [vUserInfo, vUser] = await Promise.all([
+      this.userInfoRepository.findOneBy({ user_id: idUser }),
+      this.userRepository.findOneBy({ id: idUser }),
+    ]);
+
+    if (!param.display_name && !vUserInfo.display_name) param.display_name = vUser.login;
+
+    if (vUserInfo) {
+
+      if (vUserInfo.user_id === idUser) {
+        const vUpdateResult = await this.userInfoRepository.update(vUserInfo.id, param)
+
+        if (vUpdateResult) {
+          isOk = true;
+          sMessage = 'Информация обновлена';
+        }
+      }
+
+    } else {
+      param.user_id = idUser;
+
+      vUserInfo = await this.userInfoRepository.save(param);
+
+      isOk = true;
+      sMessage = 'Информация создана';
+
+    }
+
+    return { is_ok: isOk, message: sMessage };
   }
 
   /**
@@ -99,7 +150,7 @@ export class UsersService {
       throw new Error('Текущий пользователь не опознан');
     }
 
-    const vUser = await this.usersRepository.findOneBy({ id: idUser });
+    const vUser = await this.userRepository.findOneBy({ id: idUser });
 
     if (!param.is_ok) {
       sMessage = 'Не получено согласие от пользователя';
@@ -112,7 +163,7 @@ export class UsersService {
 
       if (sNewToken) {
 
-        const vUpdateResult = await this.usersRepository.update(idUser, { token: sNewToken, pswd: sNewPswd });
+        const vUpdateResult = await this.userRepository.update(idUser, { token: sNewToken, pswd: sNewPswd });
 
 
         if (vUpdateResult) {
@@ -130,7 +181,7 @@ export class UsersService {
  * Пересоздать токен
  */
   async recreateUserToken(idUser: number): Promise<boolean> {
-    const vUser = await this.usersRepository.findOneBy({ id: idUser });
+    const vUser = await this.userRepository.findOneBy({ id: idUser });
     let isOk = false
 
     if (vUser) {
@@ -138,7 +189,7 @@ export class UsersService {
 
       if (sNewToken) {
 
-        const vUpdateResult = await this.usersRepository.update(idUser, { token: sNewToken });
+        const vUpdateResult = await this.userRepository.update(idUser, { token: sNewToken });
 
         if (vUpdateResult) {
           isOk = true;
@@ -158,7 +209,7 @@ export class UsersService {
     let sToken = 'ERROR';
 
     // Получить инфо пользователя
-    const userInfo = await this.usersRepository.findOneBy({ login: data.login });
+    const userInfo = await this.userRepository.findOneBy({ login: data.login });
 
     if (userInfo?.id && userInfo.pswd) {
       // Если пароль совпадает
@@ -170,7 +221,7 @@ export class UsersService {
     } else if (isCanLogin) {
 
       sToken = this.createNewToken(userInfo.id, userInfo.access_lvl);
-      await this.usersRepository.update(userInfo.id, { token: sToken });
+      await this.userRepository.update(userInfo.id, { token: sToken });
     }
 
     return sToken;
