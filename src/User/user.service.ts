@@ -68,10 +68,10 @@ export class UsersService {
     let vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
       sResponse = 'Пользователь с таким логином уже существует'
-      vExistUser = await this.userRepository.findOneBy({ email: param.login });
+      vExistUser = await this.userRepository.findOneBy({ email: param.email });
 
     } else if (vExistUser) {
-      sResponse = 'Пользователь с email логином уже существует';
+      sResponse = 'Пользователь с таким email уже существует';
 
     } else {
       param.access_lvl = 1;
@@ -109,12 +109,10 @@ export class UsersService {
       this.userRepository.findOneBy({ id: idUser }),
     ]);
 
-    if (!param.display_name && !vUserInfo.display_name) param.display_name = vUser.login;
-
     if (vUserInfo) {
 
       if (vUserInfo.user_id === idUser) {
-        const vUpdateResult = await this.userInfoRepository.update(vUserInfo.id, param)
+        const vUpdateResult = await this.userInfoRepository.update(vUserInfo.id, param);
 
         if (vUpdateResult) {
           isOk = true;

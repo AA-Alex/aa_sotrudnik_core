@@ -44,3 +44,79 @@ export class ListUserDto {
     @Max(30)
     limit_page: number;
 }
+
+/**
+ * Тип для ручного создания пользователя админом
+ */
+export class CreateUserByAdminDto {
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    login: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(6)
+    pswd: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    name: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    soname: string;
+}
+
+/**
+ * Тип для обновления пользователя админом
+ */
+export class UpdateUserByAdminDto {
+    @IsInt()
+    @Min(1)
+    user_id: number
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    login: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(6)
+    pswd: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    name: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    soname: string;
+
+    @IsString()
+    @MaxLength(20)
+    @MinLength(3)
+    fathername: string;
+
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    @MaxLength(13)
+    @MinLength(9)
+    phone: string;
+
+    @IsInt()
+    @Max(50)
+    access_lvl: number;
+
+    @IsString()
+    @MaxLength(20)
+    display_name: string;
+}
+

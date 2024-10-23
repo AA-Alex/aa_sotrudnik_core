@@ -17,6 +17,6 @@ export class AdminUserModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.admin))
-            .forRoutes('admin-user/list-user');
+            .forRoutes('admin-user/list-user', 'admin-user/create-user', 'admin-user/update-user');
     }
 }

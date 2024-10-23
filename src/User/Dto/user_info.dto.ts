@@ -6,8 +6,6 @@
 export class UpdateUserInfoDto {
     user_id: number;
 
-    display_name: string;
-
     name: string;
 
     soname: string;
