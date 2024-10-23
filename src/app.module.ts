@@ -5,6 +5,7 @@ import { UserModule } from './User/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserInfo } from './User/Entity/user_info.entity';
+import { AdminUserModule } from './Admin-user/admin-user.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { UserInfo } from './User/Entity/user_info.entity';
       synchronize: true,
     }),
 
-    UserModule
+    UserModule,
+    AdminUserModule
   ],
   controllers: [AppController],
   providers: [AppService],

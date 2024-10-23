@@ -3,6 +3,7 @@ import { IsEmail, IsInt, isString, IsString, MaxLength, Min, MinLength, minLengt
 // Список уровней доступа дя пользователей
 export enum AccessLevelT {
     root = 100, // рут всемогущий
+    admin = 90, // админ, почти как рут но с минимальными ограничениями
 
     banned = -1, // забанен
     noob = 0, // регистрация не завершена
