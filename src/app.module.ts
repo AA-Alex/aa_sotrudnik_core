@@ -6,6 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserInfo } from './User/Entity/user_info.entity';
 import { AdminUserModule } from './Admin-user/admin-user.module';
+import { TagModule } from './Tag/tag.module';
+import { Tag } from './Tag/Entity/tag.entity';
 
 @Module({
   imports: [
@@ -16,12 +18,13 @@ import { AdminUserModule } from './Admin-user/admin-user.module';
       username: 'alex',
       password: '123',
       database: 'postgres',
-      entities: [User, UserInfo],
+      entities: [User, UserInfo, Tag],
       synchronize: true,
     }),
 
     UserModule,
-    AdminUserModule
+    AdminUserModule,
+    TagModule
   ],
   controllers: [AppController],
   providers: [AppService],
