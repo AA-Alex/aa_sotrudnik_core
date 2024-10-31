@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsInt, IsString, Max, MaxLength, Min, } from "class-validator";
 
 /**
  * Тип для получения тегов
@@ -22,7 +22,7 @@ export class ListTagDto {
 }
 
 /**
- * Тип для создания пользователя тега
+ * Тип для создания тега
  */
 export class CreateTagDto {
     @IsString()
