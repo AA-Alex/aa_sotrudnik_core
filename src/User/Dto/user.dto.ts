@@ -22,9 +22,6 @@ export class UserCreateDto {
     @IsString()
     pswd: string;
 
-    @IsEmail()
-    email: string;
-
     access_lvl?: number;
     token?: string;
 

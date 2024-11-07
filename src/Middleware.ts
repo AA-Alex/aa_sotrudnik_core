@@ -19,15 +19,17 @@ export function faAuthSysMiddleware(level: number): any {
             let userData: { id: number, lvl: number } = null;
             const sApiKey = req.headers.apikey
 
-            if (sApiKey?.length) {
+            if (sApiKey?.length && level > 0) {
                 try {
 
                     userData = <{ id: number, lvl: number }>jwt.verify(sApiKey, secret)
+
                     respStatus = 200; // Всё ок
 
                 } catch (e) {
 
                     respStatus = 500; // Всё сломалось
+
                 }
 
                 if (!((userData?.lvl >= (level ?? 0)) || (userData?.lvl === 100)) && respStatus !== 500) {

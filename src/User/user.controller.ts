@@ -34,6 +34,9 @@ export class UsersController {
   @Post('login')
   async login(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserCreateDto,): Promise<string> {
 
+    console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa');
+
+
     return this.usersService.logIn(data);
   }
 

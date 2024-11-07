@@ -68,7 +68,7 @@ export class UsersService {
     let vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
       sResponse = 'Пользователь с таким логином уже существует'
-      vExistUser = await this.userRepository.findOneBy({ email: param.email });
+      // vExistUser = await this.userRepository.findOneBy({ email: param.email });
 
     } else if (vExistUser) {
       sResponse = 'Пользователь с таким email уже существует';
@@ -206,6 +206,7 @@ export class UsersService {
     let isCanLogin = false;
     let sToken = 'ERROR';
 
+    data.login = data.login.toLocaleLowerCase();
     // Получить инфо пользователя
     const userInfo = await this.userRepository.findOneBy({ login: data.login });
 
