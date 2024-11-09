@@ -1,12 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
 import { ctx } from 'src/main';
-import { User } from 'src/User/Entity/user.entity';
 import { CreateTagDto, ListTagDto, UpdateTagDto } from './Dto/tag.dto';
 import { Tag } from 'src/Tag/Entity/tag.entity';
+import { User } from 'src/User/Entity/user.entity';
+import { UserInfo } from 'src/User/Entity/user_info.entity';
 
 
 @Injectable()
@@ -15,6 +14,10 @@ export class TagService {
   constructor(
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(UserInfo)
+    private userInfoRepository: Repository<UserInfo>,
 
   ) {}
 

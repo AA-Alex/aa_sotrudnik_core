@@ -1,15 +1,15 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { faAuthSysMiddleware } from 'src/Middleware';
 import { AccessLevelT } from 'src/User/Dto/user.dto';
-import { User } from 'src/User/Entity/user.entity';
-import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { TagController } from './tag.controller';
 import { TagService } from './tag.service';
 import { Tag } from 'src/Tag/Entity/tag.entity';
+import { faAuthSysMiddleware } from 'src/Middleware';
+import { User } from 'src/User/Entity/user.entity';
+import { UserInfo } from 'src/User/Entity/user_info.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Tag])],
+    imports: [TypeOrmModule.forFeature([Tag, User, UserInfo])], // Зачем тут User и UserInfo не понятно, но нест далбаёб без этого ломается.
     controllers: [TagController],
     providers: [TagService],
 })

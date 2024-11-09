@@ -19,7 +19,6 @@ export class UsersService {
     private userRepository: Repository<User>,
     @InjectRepository(UserInfo)
     private userInfoRepository: Repository<UserInfo>,
-
   ) {}
 
   /**
