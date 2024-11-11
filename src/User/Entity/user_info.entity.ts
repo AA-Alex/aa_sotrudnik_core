@@ -20,7 +20,7 @@ export class UserInfo {
 
   @Column({ default: '' })
   @Index()
-  soname: string;
+  sename: string;
 
   @Column({ default: '' })
   @Index()

@@ -8,7 +8,7 @@ export class UpdateUserInfoDto {
 
     name: string;
 
-    soname: string;
+    sename: string;
 
     fathername: string;
 
