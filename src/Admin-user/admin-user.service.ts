@@ -64,9 +64,9 @@ export class AdminUsersService {
       sByLogin = `AND ui.name like('%${param.name}%')`;
     }
 
-    let sBySoname = '';
-    if (param.soname) {
-      sByLogin = `AND ui.soname like('%${param.soname}%')`;
+    let sBySurname = '';
+    if (param.surname) {
+      sByLogin = `AND ui.surname like('%${param.surname}%')`;
     }
 
     let sByDisplayName = '';
@@ -85,13 +85,13 @@ export class AdminUsersService {
     }
 
     const sql = `
-    SELECT u.id AS user_id, u.login, u.access_lvl, u.email, ui.display_name, ui.name, ui.soname, ui.fathername, ui.phone
+    SELECT u.id AS user_id, u.login, u.access_lvl, u.email, ui.display_name, ui.name, ui.surname, ui.fathername, ui.phone
     FROM "user" u
     LEFT JOIN user_info ui ON ui.user_id = u.id
     ${sByLogin}
     ${sByEmail}
     ${sByName}
-    ${sBySoname}
+    ${sBySurname}
     ${sByDisplayName}
     ${sByPhone}
     ${sByUserId}
@@ -132,7 +132,7 @@ export class AdminUsersService {
       vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
       await Promise.all([
         this.userRepository.save(vUser),
-        this.userInfoRepository.save({ user_id: vUser.id, display_name: param.soname, soname: param.soname, name: param.name }),
+        this.userInfoRepository.save({ user_id: vUser.id, display_name: param.surname, surname: param.surname, name: param.name }),
       ])
 
       sResponse = 'Пользователь создан';
@@ -187,7 +187,7 @@ export class AdminUsersService {
       if (vUserInfo) {
 
         const vUpdateResult = await this.userInfoRepository.update(
-          vUserInfo.id, { user_id: param.user_id, name: param.name, soname: param.soname, fathername: param.fathername, phone: param.phone }
+          vUserInfo.id, { user_id: param.user_id, name: param.name, surname: param.surname, fathername: param.fathername, phone: param.phone }
         );
 
         if (vUpdateResult) {
@@ -202,7 +202,7 @@ export class AdminUsersService {
         let sDisplayName = param?.display_name || vUser.login;
 
         vUserInfo = await this.userInfoRepository.save(
-          { user_id: param.user_id, display_name: sDisplayName, name: param.name, soname: param.soname, fathername: param.fathername, phone: param.phone }
+          { user_id: param.user_id, display_name: sDisplayName, name: param.name, surname: param.surname, fathername: param.fathername, phone: param.phone }
         );
 
         isOk = true;
