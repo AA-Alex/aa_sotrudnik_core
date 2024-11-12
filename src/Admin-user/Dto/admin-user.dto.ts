@@ -14,7 +14,7 @@ export class ListUserDto {
 
     @IsString()
     @MaxLength(20)
-    sename: string;
+    surname: string;
 
     @IsString()
     @MaxLength(20)
@@ -67,7 +67,7 @@ export class CreateUserByAdminDto {
     @IsString()
     @MaxLength(20)
     @MinLength(3)
-    sename: string;
+    surname: string;
 }
 
 /**
@@ -96,7 +96,7 @@ export class UpdateUserByAdminDto {
     @IsString()
     @MaxLength(20)
     @MinLength(3)
-    sename: string;
+    surname: string;
 
     @IsString()
     @MaxLength(20)
