@@ -13,7 +13,6 @@ import { Repository } from 'typeorm';
  */
 export function faAuthSysMiddleware(level: number): any {
 
-
     @Injectable()
     class Middleware implements NestMiddleware {
 

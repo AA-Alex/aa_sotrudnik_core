@@ -6,8 +6,9 @@ import * as jwt from 'jsonwebtoken';
 import { ctx } from 'src/main';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
-import { CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
+import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
 import { secret } from 'src/User/user.service';
+import { UserTag } from 'src/User/Entity/user_tag.entity';
 
 
 @Injectable()
@@ -18,6 +19,8 @@ export class AdminUsersService {
     private userRepository: Repository<User>,
     @InjectRepository(UserInfo)
     private userInfoRepository: Repository<UserInfo>,
+    @InjectRepository(UserTag)
+    private userTagRepository: Repository<UserTag>,
 
   ) {}
 
@@ -212,5 +215,53 @@ export class AdminUsersService {
     }
 
     return { is_ok: isOk, message: sMessage };
+  }
+
+  /**
+  * Добавление тега сотруднику
+  */
+  async addUserTag(param: UserTagDto): Promise<string> {
+    let sMessage = 'Не удалось добавить тег пользователю';
+
+    const vExistUserTag = await this.userTagRepository.findOneBy({ user_id: param.user_id, tag_id: param.tag_id });
+
+    if (vExistUserTag) {
+      sMessage = 'Такой тег уже привязан к сотруднику';
+    } else {
+      const vInsertResult = await this.userTagRepository.save(param);
+
+      if (vInsertResult) {
+        sMessage = 'Тег успешно привязан к сотруднику';
+      } else {
+        sMessage = 'Ошибка при добавлении тега сотруднику';
+      }
+
+    }
+
+    return sMessage;
+  }
+
+  /**
+  * Удаление тега сотрудника
+  */
+  async delUserTag(param: UserTagDto): Promise<string> {
+    let sMessage = 'Не удалось добавить тег пользователю';
+
+    const vExistUserTag = await this.userTagRepository.findOneBy({ user_id: param.user_id, tag_id: param.tag_id });
+
+    if (!vExistUserTag) {
+      sMessage = 'Такой тег не привязан к сотруднику';
+    } else {
+      const vDeleteResult = await this.userTagRepository.delete(vExistUserTag.id);
+
+      if (vDeleteResult) {
+        sMessage = 'Тег успешно отвязан от сотрудника';
+      } else {
+        sMessage = 'Ошибка при удалении тега у сотрудника';
+      }
+
+    }
+
+    return sMessage;
   }
 }

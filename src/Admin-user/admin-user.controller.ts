@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef } from '@nestjs/common';
 import { AdminUsersService } from './admin-user.service';
-import { CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
+import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
 
 @Controller('admin-user')
 export class AdminUsersController {
@@ -47,5 +47,22 @@ export class AdminUsersController {
     return await this.adminUsersService.updateUserInfo(data);
   }
 
+  /**
+  * Добавить тег сотруднику
+  */
+  @Post('add-user-tag')
+  async addUserTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserTagDto,): Promise<string> {
+
+    return await this.adminUsersService.addUserTag(data);
+  }
+
+  /**
+  * Удалить тег у сотрудника
+  */
+  @Post('del-user-tag')
+  async delUserTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserTagDto,): Promise<string> {
+
+    return await this.adminUsersService.delUserTag(data);
+  }
 
 }

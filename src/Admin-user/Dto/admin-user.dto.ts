@@ -120,3 +120,17 @@ export class UpdateUserByAdminDto {
     display_name: string;
 }
 
+
+/**
+ * Тип для добавления тега пользователю
+ */
+export class UserTagDto {
+    @IsInt()
+    @Min(1)
+    user_id: number
+
+    @IsInt()
+    @Min(1)
+    tag_id: number
+
+}

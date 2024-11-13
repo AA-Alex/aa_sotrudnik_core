@@ -9,6 +9,7 @@ import { AdminUserModule } from './Admin-user/admin-user.module';
 import { TagModule } from './Tag/tag.module';
 import { Tag } from './Tag/Entity/tag.entity';
 import { dbConf } from './Config/Config';
+import { UserTag } from './User/Entity/user_tag.entity';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { dbConf } from './Config/Config';
       username: dbConf.username,
       password: dbConf.password,
       database: dbConf.database,
-      entities: [User, UserInfo, Tag],
+      entities: [User, UserInfo, Tag, UserTag],
       synchronize: true,
     }),
 
