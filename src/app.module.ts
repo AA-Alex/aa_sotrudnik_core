@@ -8,16 +8,17 @@ import { UserInfo } from './User/Entity/user_info.entity';
 import { AdminUserModule } from './Admin-user/admin-user.module';
 import { TagModule } from './Tag/tag.module';
 import { Tag } from './Tag/Entity/tag.entity';
+import { dbConf } from './Config/Config';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'pavel',
-      password: 'spam847ek',
-      database: 'dbtest',
+      type: dbConf.type,
+      host: dbConf.host,
+      port: dbConf.port,
+      username: dbConf.username,
+      password: dbConf.password,
+      database: dbConf.database,
       entities: [User, UserInfo, Tag],
       synchronize: true,
     }),
