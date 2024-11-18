@@ -8,3 +8,7 @@ export const dbConf = {
     password: '123',
     database: 'postgres',
 }
+
+export const core = {
+    port: 4000
+}

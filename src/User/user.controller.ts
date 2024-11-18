@@ -32,11 +32,7 @@ export class UsersController {
    * Авторизоваться по логину и паролю, получить токен
    */
   @Post('login')
-  async login(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserCreateDto,): Promise<string> {
-
-    console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa');
-
-
+  async login(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserCreateDto,): Promise<{ token: string }> {
     return this.usersService.logIn(data);
   }
 
