@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ctx } from 'src/main';
@@ -75,15 +75,21 @@ export class TagService {
  */
   async createTag(param: CreateTagDto): Promise<string> {
     param.tag_name = param.tag_name.toLowerCase();
-    let sResponse = 'Ошибка при создании тега';
+    let sResponse = '';
 
     let vExistTag = await this.tagRepository.findOneBy({ tag_name: param.tag_name });
     if (vExistTag) {
-      sResponse = 'Тег с таким названием уже существует'
+      throw new HttpException('Тег с таким названием уже существует', HttpStatus.FORBIDDEN);
+
     } else {
       const vTag = await this.tagRepository.save({ ...param, user_id: ctx.userSys.user_id });
 
-      if (vTag?.id) sResponse = 'Тег создан';
+      if (vTag?.id) {
+        sResponse = 'Тег создан';
+      } else {
+        throw new HttpException('Ошибка при создании тега', HttpStatus.INTERNAL_SERVER_ERROR);
+
+      }
     }
 
     return sResponse;
@@ -93,27 +99,27 @@ export class TagService {
  * Обновить инфо тег
  */
   async updateUserInfo(param: UpdateTagDto): Promise<{ is_ok: boolean, message: string }> {
-    if (!param.tag_id) {
-      throw new Error('Не указан id тега');
-    }
     const idTag = param.tag_id;
+
+    if (!idTag) {
+      throw new HttpException('Не указан id тега', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     let isOk = false;
     let sMessage = 'Не удалось обновить информацию о теге';
 
     const vTag = await this.tagRepository.findOneBy({ id: idTag });
-
-
     if (!vTag) {
-      throw new Error('Не удалось найти тег по id');
+      throw new HttpException('Не удалось найти тег по id', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     if (param.tag_name) {
       let vExistTag = await this.tagRepository.findOneBy({ tag_name: param.tag_name });
+
       if (!vExistTag || (vExistTag.tag_name && param.tag_name === vExistTag.tag_name)) {
         isOk = true;
       } else {
-        sMessage = `Тег с таким названием ${param.tag_name} уже существует`;
+        throw new HttpException(`Тег с названием ${param.tag_name} уже существует`, HttpStatus.FORBIDDEN);
       }
 
     }

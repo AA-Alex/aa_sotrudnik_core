@@ -22,7 +22,7 @@ export class UserModule implements NestModule {
 
     consumer
       .apply(faAuthSysMiddleware(AccessLevelT.registered))
-      .forRoutes('user/update-user-password', 'user/update-user-info');
+      .forRoutes('user/update-user-password', 'user/update-user-info', 'user/get-self-info');
   }
 
 }

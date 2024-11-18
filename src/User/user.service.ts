@@ -1,8 +1,8 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './Entity/user.entity';
-import { updateUserPasswordDto, UserCreateDto } from './Dto/user.dto';
+import { updateUserPasswordDto, UserCreateDto, UserDto } from './Dto/user.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { ctx } from 'src/main';
@@ -60,33 +60,41 @@ export class UsersService {
   /**
    * Регистрация пользователя
    */
-  async register(param: UserCreateDto): Promise<string> {
+  async register(param: UserCreateDto): Promise<{ token: string }> {
     param.login = param.login.toLowerCase();
-    let sResponse = 'Ошибка при создании пользователя';
+    let sToken: string = null;
 
     let vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
-      sResponse = 'Пользователь с таким логином уже существует'
-      // vExistUser = await this.userRepository.findOneBy({ email: param.email });
+      throw new HttpException('Пользователь с таким логином уже существует', HttpStatus.FORBIDDEN);
 
-    } else if (vExistUser) {
-      sResponse = 'Пользователь с таким email уже существует';
+      vExistUser = await this.userRepository.findOneBy({ email: param.email });
+
+    } else if (vExistUser && param.email) {
+
+      throw new HttpException('Пользователь с таким email уже существует', HttpStatus.FORBIDDEN);
 
     } else {
-      param.access_lvl = 1;
-      param.pswd = bcrypt.hashSync(param.pswd, 13);
-      const vUser = await this.userRepository.save(param);
 
-      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
+      const vInsertData: UserDto = {
+        access_lvl: 1,
+        pswd: bcrypt.hashSync(param.pswd, 13),
+        login: param.login,
+        email: param.email,
+      }
+
+      const vUser = await this.userRepository.save(vInsertData);
+
+      sToken = this.createNewToken(vUser.id, vUser.access_lvl);
+      vUser.token = sToken;
       await Promise.all([
         this.userRepository.save(vUser),
         this.userInfoRepository.create({ user_id: vUser.id, display_name: vUser.login }),
       ])
 
-      sResponse = 'Пользователь создан';
     }
 
-    return sResponse;
+    return { token: sToken };
   }
 
   /**
@@ -100,7 +108,7 @@ export class UsersService {
     const idUser = ctx.userSys.user_id;
 
     if (!ctx.userSys.user_id) {
-      throw new Error('Текущий пользователь не опознан');
+      throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     let [vUserInfo, vUser] = await Promise.all([
@@ -144,13 +152,13 @@ export class UsersService {
     const idUser = ctx.userSys.user_id;
 
     if (!ctx.userSys.user_id) {
-      throw new Error('Текущий пользователь не опознан');
+      throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     const vUser = await this.userRepository.findOneBy({ id: idUser });
 
     if (!param.is_ok) {
-      sMessage = 'Не получено согласие от пользователя';
+      throw new HttpException('Не получено согласие от пользователя', HttpStatus.FORBIDDEN);
 
     } else if (vUser) {
 
@@ -203,7 +211,7 @@ export class UsersService {
    */
   public async logIn(data: { login: string, pswd: string }): Promise<{ token: string }> {
     let isCanLogin = false;
-    let sToken = 'ERROR';
+    let sToken = '';
 
     data.login = data.login.toLocaleLowerCase();
     // Получить инфо пользователя
@@ -221,7 +229,30 @@ export class UsersService {
       await this.userRepository.update(userInfo.id, { token: sToken });
     }
 
+    if (!sToken) {
+      throw new HttpException('Ошибка при вводе логина или пароля', HttpStatus.FORBIDDEN);
+    }
+
     return { token: sToken };
   }
+
+  /**
+ * Получить данные текущего пользователя
+ */
+  async getSelfInfo(): Promise<{ user: User, user_info: UserInfo }> {
+    const idCurrUser = ctx.userSys.user_id;
+
+    if (!idCurrUser) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.FORBIDDEN);
+    }
+    const [vUser, vUserInfo] = await Promise.all([
+      this.userRepository.findOneBy({ id: idCurrUser }),
+      this.userInfoRepository.findOneBy({ user_id: idCurrUser }),
+    ]);
+
+    return { user: vUser, user_info: vUserInfo };
+
+  }
+
 
 }

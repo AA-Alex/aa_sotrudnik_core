@@ -1,6 +1,8 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef } from '@nestjs/common';
 import { AdminUsersService } from './admin-user.service';
 import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
+import { User } from 'src/User/Entity/user.entity';
+import { UserInfo } from 'src/User/Entity/user_info.entity';
 
 @Controller('admin-user')
 export class AdminUsersController {
@@ -31,7 +33,7 @@ export class AdminUsersController {
   * Создать пользователя
   */
   @Post('create-user')
-  async createUserByAdmin(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateUserByAdminDto,): Promise<string> {
+  async createUserByAdmin(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateUserByAdminDto,): Promise<{ user: User, user_info: UserInfo }> {
 
     return await this.adminUsersService.createUser(data);
   }

@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsEmail, IsInt, IsNumber, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
 
 // Список уровней доступа дя пользователей
 export enum AccessLevelT {
@@ -14,17 +14,41 @@ export enum AccessLevelT {
 }
 
 /**
+ * Тип для обновления инфы о пользователе
+ */
+export class UserDto {
+    @IsNumber()
+    id?: number;
+
+    @IsString()
+    login?: string;
+
+    @IsEmail()
+    email?: string;
+
+    @IsString()
+    pswd?: string;
+
+    @IsString()
+    token?: string;
+
+    @IsString()
+    access_lvl?: number;
+}
+
+/**
  * Тип для регистрации пользователя
  */
 export class UserCreateDto {
     @IsString()
     login: string;
 
+    @IsEmail()
+    email: string;
+
     @IsString()
     pswd: string;
 
-    access_lvl?: number;
-    token?: string;
 
 }
 

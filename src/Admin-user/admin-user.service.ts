@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -121,27 +121,28 @@ export class AdminUsersService {
   /**
  * Регистрация пользователя
  */
-  async createUser(param: CreateUserByAdminDto): Promise<string> {
+  async createUser(param: CreateUserByAdminDto): Promise<{ user: User, user_info: UserInfo }> {
     param.login = param.login.toLowerCase();
-    let sResponse = 'Ошибка при создании пользователя';
+    let out: { user: User, user_info: UserInfo } = null;
 
     let vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
-      sResponse = 'Пользователь с таким логином уже существует'
+      throw new HttpException('Пользователь с таким логином уже существует', HttpStatus.FORBIDDEN);
     } else {
       param.pswd = bcrypt.hashSync(param.pswd, 13);
       const vUser = await this.userRepository.save({ ...param, access_lvl: 1 });
 
       vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
-      await Promise.all([
+      const [vNewUser, vNewUserInfo] = await Promise.all([
         this.userRepository.save(vUser),
         this.userInfoRepository.save({ user_id: vUser.id, display_name: param.surname, surname: param.surname, name: param.name }),
-      ])
+      ]);
 
-      sResponse = 'Пользователь создан';
+      out = { user: vNewUser, user_info: vNewUserInfo }
+
     }
 
-    return sResponse;
+    return out;
   }
 
   /**
@@ -149,7 +150,7 @@ export class AdminUsersService {
  */
   async updateUserInfo(param: UpdateUserByAdminDto): Promise<{ is_ok: boolean, message: string }> {
     if (!param.user_id) {
-      throw new Error('Не указан id пользователя');
+      throw new HttpException('Не указан id пользователя', HttpStatus.FORBIDDEN);
     }
     const idUser = param.user_id;
 
@@ -162,7 +163,7 @@ export class AdminUsersService {
     ]);
 
     if (!vUser) {
-      throw new Error('Не удалось найти пользователя по id');
+      throw new HttpException('Не удалось найти пользователя по id', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     if (param.login) {
@@ -170,7 +171,7 @@ export class AdminUsersService {
       if (!vExistUser || (vExistUser.login && param.login === vExistUser.login)) {
         isOk = true;
       } else {
-        sMessage = `Пользователь с таким логином ${param.login} уже существует`;
+        throw new HttpException(`Пользователь с таким логином ${param.login} уже существует`, HttpStatus.FORBIDDEN);
       }
 
     }
@@ -226,14 +227,15 @@ export class AdminUsersService {
     const vExistUserTag = await this.userTagRepository.findOneBy({ user_id: param.user_id, tag_id: param.tag_id });
 
     if (vExistUserTag) {
-      sMessage = 'Такой тег уже привязан к сотруднику';
+      throw new HttpException('Такой тег уже привязан к сотруднику', HttpStatus.FORBIDDEN);
+
     } else {
       const vInsertResult = await this.userTagRepository.save(param);
 
       if (vInsertResult) {
         sMessage = 'Тег успешно привязан к сотруднику';
       } else {
-        sMessage = 'Ошибка при добавлении тега сотруднику';
+        throw new HttpException('Ошибка при добавлении тега сотруднику', HttpStatus.INTERNAL_SERVER_ERROR);
       }
 
     }
@@ -250,14 +252,14 @@ export class AdminUsersService {
     const vExistUserTag = await this.userTagRepository.findOneBy({ user_id: param.user_id, tag_id: param.tag_id });
 
     if (!vExistUserTag) {
-      sMessage = 'Такой тег не привязан к сотруднику';
+      throw new HttpException('Такой тег не привязан к сотруднику', HttpStatus.FORBIDDEN);
     } else {
       const vDeleteResult = await this.userTagRepository.delete(vExistUserTag.id);
 
       if (vDeleteResult) {
         sMessage = 'Тег успешно отвязан от сотрудника';
       } else {
-        sMessage = 'Ошибка при удалении тега у сотрудника';
+        throw new HttpException('Ошибка при удалении тега у сотрудника', HttpStatus.INTERNAL_SERVER_ERROR);
       }
 
     }

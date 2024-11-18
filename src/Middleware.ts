@@ -24,7 +24,6 @@ export function faAuthSysMiddleware(level: number): any {
 
         async use(req: Request, resp: Response, next: NextFunction) {
 
-            // console.log('userRepository :>> ', this.userRepository);
             let respStatus = 500;
             let parsedUserData: { id: number, lvl: number } = null;
             const sApiKey = req.headers.apikey
