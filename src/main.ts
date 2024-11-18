@@ -1,17 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Injectable } from '@nestjs/common';
+import { core } from './Config/Config'
 
-async function bootstrap() {
+async function start() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   app.enableCors();
-
-  await app.listen(4000);
-
+  await app.listen(core.port, () => console.log(`Server started on port = ${core.port}`));
 }
 
-bootstrap();
+start();
 
 export const ctx = {
   userSys: {

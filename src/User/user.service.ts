@@ -201,7 +201,7 @@ export class UsersService {
   /**
    * LogIn
    */
-  public async logIn(data: { login: string, pswd: string }): Promise<string> {
+  public async logIn(data: { login: string, pswd: string }): Promise<{ token: string }> {
     let isCanLogin = false;
     let sToken = 'ERROR';
 
@@ -217,12 +217,11 @@ export class UsersService {
     if (isCanLogin && userInfo.token) {
       sToken = userInfo.token;
     } else if (isCanLogin) {
-
       sToken = this.createNewToken(userInfo.id, userInfo.access_lvl);
       await this.userRepository.update(userInfo.id, { token: sToken });
     }
 
-    return sToken;
+    return { token: sToken };
   }
 
 }
