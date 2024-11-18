@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { CreateTagDto, ListTagDto, UpdateTagDto } from './Dto/tag.dto';
 
@@ -13,6 +13,7 @@ export class TagController {
    * Получить данные пользователей (с фильтром и пагинацией)
    */
   @Post('list-tag')
+  @HttpCode(200)
   async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListTagDto,): Promise<{
     tag_id: number,
     tag_name: string,
@@ -28,6 +29,7 @@ export class TagController {
   * Создать пользователя
   */
   @Post('create-tag')
+  @HttpCode(200)
   async createTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateTagDto,): Promise<string> {
 
     return await this.tagService.createTag(data);
@@ -37,6 +39,7 @@ export class TagController {
   * Обновить пользователя
   */
   @Post('update-tag')
+  @HttpCode(200)
   async updateUserByAdmin(@Req() request: Request, @Body(
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateTagDto,): Promise<{ is_ok: boolean, message: string }> {

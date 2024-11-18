@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { AdminUsersService } from './admin-user.service';
 import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
 import { User } from 'src/User/Entity/user.entity';
@@ -15,6 +15,7 @@ export class AdminUsersController {
    * Получить данные пользователей (с фильтром и пагинацией)
    */
   @Post('list-user')
+  @HttpCode(200)
   async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListUserDto,): Promise<{
     user_id: number,
     login: string,
@@ -33,6 +34,7 @@ export class AdminUsersController {
   * Создать пользователя
   */
   @Post('create-user')
+  @HttpCode(200)
   async createUserByAdmin(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateUserByAdminDto,): Promise<{ user: User, user_info: UserInfo }> {
 
     return await this.adminUsersService.createUser(data);
@@ -42,6 +44,7 @@ export class AdminUsersController {
   * Обновить пользователя
   */
   @Post('update-user')
+  @HttpCode(200)
   async updateUserByAdmin(@Req() request: Request, @Body(
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateUserByAdminDto,): Promise<{ is_ok: boolean, message: string }> {
@@ -53,6 +56,7 @@ export class AdminUsersController {
   * Добавить тег сотруднику
   */
   @Post('add-user-tag')
+  @HttpCode(200)
   async addUserTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserTagDto,): Promise<string> {
 
     return await this.adminUsersService.addUserTag(data);
@@ -62,6 +66,7 @@ export class AdminUsersController {
   * Удалить тег у сотрудника
   */
   @Post('del-user-tag')
+  @HttpCode(200)
   async delUserTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserTagDto,): Promise<string> {
 
     return await this.adminUsersService.delUserTag(data);
