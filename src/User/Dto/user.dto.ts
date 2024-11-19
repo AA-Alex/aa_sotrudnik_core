@@ -43,12 +43,11 @@ export class UserCreateDto {
     @IsString()
     login: string;
 
-    @IsEmail()
-    email: string;
+    // @IsEmail()
+    email?: string;
 
     @IsString()
     pswd: string;
-
 
 }
 
