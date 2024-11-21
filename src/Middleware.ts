@@ -23,7 +23,7 @@ export function faAuthSysMiddleware(level: number): any {
         ) {}
 
         async use(req: Request, resp: Response, next: NextFunction) {
-
+            ctx.userSys.user_id = 0;
             let respStatus = 500;
             let parsedUserData: { id: number, lvl: number } = null;
             const sApiKey = req.headers.apikey
@@ -45,9 +45,7 @@ export function faAuthSysMiddleware(level: number): any {
                     }
 
                 } catch (e) {
-
                     respStatus = 500; // Всё сломалось
-
                 }
 
                 if (!((parsedUserData?.lvl >= (level ?? 0)) || (parsedUserData?.lvl === 100)) && respStatus !== 500) {
@@ -60,11 +58,11 @@ export function faAuthSysMiddleware(level: number): any {
             resp.status(respStatus)
 
             if (respStatus === 200) {
+                ctx.userSys.user_id = parsedUserData?.id || 0
                 next();
             } else {
                 resp.send('Ошибка доступа');
             }
-            ctx.userSys.user_id = parsedUserData?.id || 0
         }
     }
 
