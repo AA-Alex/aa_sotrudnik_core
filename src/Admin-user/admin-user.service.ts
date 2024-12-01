@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import { ctx } from 'src/main';
+import { ctx, PaginationI } from 'src/main';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
@@ -36,18 +36,21 @@ export class AdminUsersService {
   * Получить пользователей
   */
   async listUser(param: ListUserDto): Promise<{
-    user_id: number,
-    login: string,
-    access_lvl: number,
-    email: string,
-    display_name: string,
-    name: string,
-    fathername: string,
-    phone: string
-  }[]> {
+    list_user: {
+      user_id: number,
+      login: string,
+      access_lvl: number,
+      email: string,
+      display_name: string,
+      name: string,
+      fathername: string,
+      phone: string
+    }[],
+    pagination: PaginationI,
+  }> {
 
     if (!param.page) param.page = 0;
-    if (!param.limit_page) param.limit_page = 30;
+    if (!param.limit_page) param.limit_page = 2;
 
     const sLimit = `LIMIT ${param.limit_page}`;
     const sOffset = `OFFSET ${param.page * param.limit_page}`;
@@ -88,7 +91,6 @@ export class AdminUsersService {
     }
 
     const sql = `
-    SELECT u.id AS user_id, u.login, u.access_lvl, u.email, ui.display_name, ui.name, ui.surname, ui.fathername, ui.phone
     FROM "user" u
     LEFT JOIN user_info ui ON ui.user_id = u.id
     ${sByLogin}
@@ -98,10 +100,15 @@ export class AdminUsersService {
     ${sByDisplayName}
     ${sByPhone}
     ${sByUserId}
-    ORDER BY u.id ASC
+        `;
+
+
+    const sqlSelect = `
+    SELECT u.id AS user_id, u.login, u.access_lvl, u.email, ui.display_name, ui.name, ui.surname, ui.fathername, ui.phone 
+    ${sql}
+    ORDER BY u.id
     ${sOffset}
     ${sLimit}
-    ;
     `;
 
     const aUserData: {
@@ -113,9 +120,18 @@ export class AdminUsersService {
       name: string,
       fathername: string,
       phone: string
-    }[] = await this.userRepository.query(sql);
+    }[] = await this.userRepository.query(sqlSelect);
 
-    return aUserData;
+    const iCount: number = (await this.userRepository.query(`SELECT COUNT(u.id) AS cnt ${sql}`))[0]?.cnt ?? 0;
+
+    let pagination: PaginationI = {
+      curr_page: param.page,                             // Текущая страница
+      total: Number(iCount),                             // Всего на страницу
+      page_total: iCount / param.limit_page,             // Всего страниц
+      page_limit: param.limit_page,                      // Всего количество на странице
+    };
+
+    return { list_user: aUserData, pagination }
   }
 
   /**

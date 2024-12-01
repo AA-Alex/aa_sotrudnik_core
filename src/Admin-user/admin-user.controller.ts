@@ -3,6 +3,7 @@ import { AdminUsersService } from './admin-user.service';
 import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
+import { PaginationI } from 'src/main';
 
 @Controller('admin-user')
 export class AdminUsersController {
@@ -16,18 +17,21 @@ export class AdminUsersController {
    */
   @Post('list-user')
   @HttpCode(200)
-  async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListUserDto,): Promise<{
-    user_id: number,
-    login: string,
-    access_lvl: number,
-    email: string,
-    display_name: string,
-    name: string,
-    fathername: string,
-    phone: string
-  }[]> {
+  async listUser(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListUserDto,): Promise<{
+    list_user: {
+      user_id: number,
+      login: string,
+      access_lvl: number,
+      email: string,
+      display_name: string,
+      name: string,
+      fathername: string,
+      phone: string
+    }[],
+    pagination: PaginationI,
+  }> {
 
-    return await this.adminUsersService.listUser(data);
+    return await this.adminUsersService.listUser(data)
   }
 
   /**
