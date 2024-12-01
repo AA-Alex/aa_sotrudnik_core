@@ -28,6 +28,9 @@ export class CreateTagDto {
     @IsString()
     @MaxLength(20)
     tag_name: string;
+
+    curr_user?: number
+
 }
 
 /**
@@ -41,5 +44,7 @@ export class UpdateTagDto {
     @IsString()
     @MaxLength(20)
     tag_name: string;
+
+    curr_user?: number
 }
 

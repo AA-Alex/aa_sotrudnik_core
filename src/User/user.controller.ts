@@ -26,8 +26,8 @@ export class UsersController {
  */
   @Post('get-self-info')
   @HttpCode(200)
-  async getSelfInfo(): Promise<{ user: User, user_info: UserInfo }> {
-    return this.usersService.getSelfInfo();
+  async getSelfInfo(@Req() request: Request, @Body() data: any): Promise<{ user: User, user_info: UserInfo }> {
+    return this.usersService.getSelfInfo(data);
   }
 
 

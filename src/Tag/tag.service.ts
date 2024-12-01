@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ctx } from 'src/main';
 import { CreateTagDto, ListTagDto, UpdateTagDto } from './Dto/tag.dto';
 import { Tag } from 'src/Tag/Entity/tag.entity';
 import { User } from 'src/User/Entity/user.entity';
@@ -76,13 +75,14 @@ export class TagService {
   async createTag(param: CreateTagDto): Promise<string> {
     param.tag_name = param.tag_name.toLowerCase();
     let sResponse = '';
+    const idUser = param?.curr_user ?? 0;
 
     let vExistTag = await this.tagRepository.findOneBy({ tag_name: param.tag_name });
     if (vExistTag) {
       throw new HttpException('Тег с таким названием уже существует', HttpStatus.FORBIDDEN);
 
     } else {
-      const vTag = await this.tagRepository.save({ ...param, user_id: ctx.userSys.user_id });
+      const vTag = await this.tagRepository.save({ ...param, user_id: idUser });
 
       if (vTag?.id) {
         sResponse = 'Тег создан';
@@ -100,6 +100,7 @@ export class TagService {
  */
   async updateUserInfo(param: UpdateTagDto): Promise<{ is_ok: boolean, message: string }> {
     const idTag = param.tag_id;
+    const idUser = param?.curr_user ?? 0;
 
     if (!idTag) {
       throw new HttpException('Не указан id тега', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -125,7 +126,7 @@ export class TagService {
     }
 
     if (isOk) {
-      await this.tagRepository.update(idTag, { tag_name: param.tag_name, user_id: ctx.userSys.user_id });
+      await this.tagRepository.update(idTag, { tag_name: param.tag_name, user_id: idUser });
       isOk = true;
       sMessage = 'Информация обновлена';
     }

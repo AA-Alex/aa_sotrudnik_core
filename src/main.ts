@@ -22,9 +22,3 @@ async function start() {
 }
 
 start();
-
-export const ctx = {
-  userSys: {
-    user_id: 0
-  }
-}

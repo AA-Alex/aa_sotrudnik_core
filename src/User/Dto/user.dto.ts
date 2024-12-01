@@ -70,4 +70,6 @@ export class updateUserPasswordDto {
     @MinLength(6)
     @MaxLength(20)
     pswd: string;
+
+    curr_user?: number
 }

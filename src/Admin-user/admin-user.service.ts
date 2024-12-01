@@ -3,12 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import { ctx, PaginationI } from 'src/main';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
 import { secret } from 'src/User/user.service';
 import { UserTag } from 'src/User/Entity/user_tag.entity';
+import { PaginationI } from 'src/main';
 
 
 @Injectable()

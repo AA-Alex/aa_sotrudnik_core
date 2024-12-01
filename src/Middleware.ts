@@ -3,7 +3,6 @@ import * as jwt from 'jsonwebtoken';
 import { HttpException, HttpStatus, Injectable, mixin, NestMiddleware, } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { secret } from './User/user.service';
-import { ctx } from './main';
 import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './User/Entity/user.entity';
 import { Repository } from 'typeorm';
@@ -21,9 +20,7 @@ export function faAuthSysMiddleware(level: number): any {
             private userRepository: Repository<User>,
 
         ) {}
-
         async use(req: Request, resp: Response, next: NextFunction) {
-            ctx.userSys.user_id = 0;
             let respStatus = 500;
             let parsedUserData: { id: number, lvl: number } = null;
             const sApiKey = String(req.headers.apikey)
@@ -45,11 +42,11 @@ export function faAuthSysMiddleware(level: number): any {
                     }
 
                 } catch (e) {
-                    respStatus = 500; // Всё сломалось
+                    throw new HttpException('Ошибка сервера!', HttpStatus.INTERNAL_SERVER_ERROR);
                 }
 
                 if (!((parsedUserData?.lvl >= (level ?? 0)) || (parsedUserData?.lvl === 100)) && respStatus !== 500) {
-                    respStatus = 403 // Нехватает прав TODO приделать роль
+                    throw new HttpException('Ошибка доступа', HttpStatus.FORBIDDEN);
                 }
             } else if (level === 0) {
                 respStatus = 200;
@@ -58,7 +55,7 @@ export function faAuthSysMiddleware(level: number): any {
             resp.status(respStatus)
 
             if (respStatus === 200) {
-                ctx.userSys.user_id = parsedUserData?.id || 0
+                req.body.curr_user = parsedUserData?.id || 0;
                 next();
             } else {
                 throw new HttpException('Ошибка доступа', HttpStatus.INTERNAL_SERVER_ERROR);

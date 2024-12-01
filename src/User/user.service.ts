@@ -5,7 +5,6 @@ import { User } from './Entity/user.entity';
 import { updateUserPasswordDto, UserCreateDto, UserDto } from './Dto/user.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import { ctx } from 'src/main';
 import { UserInfo } from './Entity/user_info.entity';
 import { UpdateUserInfoDto } from './Dto/user_info.dto';
 
@@ -105,9 +104,9 @@ export class UsersService {
     let isOk = false;
     let sMessage = 'Не удалось обновить информацию о пользователе';
 
-    const idUser = ctx.userSys.user_id;
+    const idUser = param?.curr_user ?? 0;;
 
-    if (!ctx.userSys.user_id) {
+    if (!idUser) {
       throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -149,9 +148,9 @@ export class UsersService {
     let sMessage = 'Не удалось сменить пароль';
     let sNewToken = '';
 
-    const idUser = ctx.userSys.user_id;
+    const idUser = param?.curr_user ?? 0;
 
-    if (!ctx.userSys.user_id) {
+    if (idUser) {
       throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -236,11 +235,12 @@ export class UsersService {
   /**
  * Получить данные текущего пользователя
  */
-  async getSelfInfo(): Promise<{ user: User, user_info: UserInfo }> {
-    const idCurrUser = ctx.userSys.user_id;
+  async getSelfInfo(data: { curr_user?: number }): Promise<{ user: User, user_info: UserInfo }> {
+
+    const idCurrUser = data?.curr_user ?? 0;
 
     if (!idCurrUser) {
-      throw new HttpException('Вы не авторизованы', HttpStatus.FORBIDDEN);
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
     }
     const [vUser, vUserInfo] = await Promise.all([
       this.userRepository.findOneBy({ id: idCurrUser }),

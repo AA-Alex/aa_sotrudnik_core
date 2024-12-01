@@ -1,5 +1,3 @@
-
-
 /**
  * Тип для обновления инфы о пользователе
  */
@@ -14,4 +12,5 @@ export class UpdateUserInfoDto {
 
     phone: string;
 
+    curr_user?: number
 }
