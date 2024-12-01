@@ -222,13 +222,10 @@ export class UsersService {
       isCanLogin = await bcrypt.compare(data.pswd, userInfo.pswd);
     }
 
-    if (isCanLogin && userInfo.token) {
-      sToken = userInfo.token;
-    } else if (isCanLogin) {
+    if (isCanLogin) {
       sToken = this.createNewToken(userInfo.id, userInfo.access_lvl);
       await this.userRepository.update(userInfo.id, { token: sToken });
     }
-
     if (!sToken) {
       throw new HttpException('Ошибка при вводе логина или пароля', HttpStatus.FORBIDDEN);
     }

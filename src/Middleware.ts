@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 
-import { Injectable, mixin, Module, NestMiddleware, NestModule } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, mixin, NestMiddleware, } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { secret } from './User/user.service';
 import { ctx } from './main';
@@ -26,7 +26,7 @@ export function faAuthSysMiddleware(level: number): any {
             ctx.userSys.user_id = 0;
             let respStatus = 500;
             let parsedUserData: { id: number, lvl: number } = null;
-            const sApiKey = req.headers.apikey
+            const sApiKey = String(req.headers.apikey)
 
             if (sApiKey?.length && level > 0) {
                 try {
@@ -61,7 +61,7 @@ export function faAuthSysMiddleware(level: number): any {
                 ctx.userSys.user_id = parsedUserData?.id || 0
                 next();
             } else {
-                resp.send('Ошибка доступа');
+                throw new HttpException('Ошибка доступа', HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }

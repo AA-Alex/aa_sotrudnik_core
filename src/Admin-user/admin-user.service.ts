@@ -127,7 +127,7 @@ export class AdminUsersService {
     let pagination: PaginationI = {
       curr_page: param.page,                             // Текущая страница
       total: Number(iCount),                             // Всего на страницу
-      page_total: iCount / param.limit_page,             // Всего страниц
+      page_total: Math.ceil(iCount / param.limit_page),             // Всего страниц
       page_limit: param.limit_page,                      // Всего количество на странице
     };
 
