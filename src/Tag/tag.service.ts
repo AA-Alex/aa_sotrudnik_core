@@ -98,7 +98,7 @@ export class TagService {
   /**
  * Обновить инфо тег
  */
-  async updateUserInfo(param: UpdateTagDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateTag(param: UpdateTagDto): Promise<{ is_ok: boolean, message: string }> {
     const idTag = param.tag_id;
     const idUser = param?.curr_user ?? 0;
 
@@ -115,6 +115,7 @@ export class TagService {
     }
 
     if (param.tag_name) {
+      param.tag_name = param.tag_name.toLocaleLowerCase();
       let vExistTag = await this.tagRepository.findOneBy({ tag_name: param.tag_name });
 
       if (!vExistTag || (vExistTag.tag_name && param.tag_name === vExistTag.tag_name)) {

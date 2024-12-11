@@ -44,7 +44,7 @@ export class TagController {
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateTagDto,): Promise<{ is_ok: boolean, message: string }> {
 
-    return await this.tagService.updateUserInfo(data);
+    return await this.tagService.updateTag(data);
   }
 
 
