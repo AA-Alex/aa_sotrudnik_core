@@ -69,7 +69,7 @@ export class UsersController {
   @HttpCode(200)
   async updateUserPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: updateUserPasswordDto): Promise<{ is_ok: boolean, message: string, token: string }> {
 
-    return await this.usersService.updateUserPassword(data);
+    return await this.usersService.updateUserPassword(data, request.body);
   }
 
   /**
@@ -79,7 +79,7 @@ export class UsersController {
   @HttpCode(200)
   async updateUserInfo(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
 
-    return await this.usersService.updateUserInfo(data);
+    return await this.usersService.updateUserInfo(data, request.body);
   }
 
 

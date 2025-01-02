@@ -32,7 +32,7 @@ export class TagController {
   @HttpCode(200)
   async createTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateTagDto,): Promise<string> {
 
-    return await this.tagService.createTag(data);
+    return await this.tagService.createTag(data, request.body);
   }
 
   /**
@@ -44,7 +44,7 @@ export class TagController {
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateTagDto,): Promise<{ is_ok: boolean, message: string }> {
 
-    return await this.tagService.updateTag(data);
+    return await this.tagService.updateTag(data, request.body);
   }
 
 

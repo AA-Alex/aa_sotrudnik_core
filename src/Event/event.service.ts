@@ -72,10 +72,14 @@ export class EventService {
   /**
  * Создать событие
  */
-  async createEvent(param: CreateEventDto): Promise<string> {
+  async createEvent(param: CreateEventDto, req: any): Promise<string> {
     param.event_name = param.event_name.toLowerCase();
     let sResponse = '';
-    const idUser = param?.curr_user ?? 0;
+    const idUser = req?.curr_user ?? 0;
+
+    if (!idUser) {
+      throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     let vExistEvent = await this.eventRepository.findOneBy({ event_name: param.event_name });
     if (vExistEvent) {
@@ -98,9 +102,13 @@ export class EventService {
   /**
    * Обновить событие
    */
-  async updateEvent(param: UpdateEventDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateEvent(param: UpdateEventDto, req: any): Promise<{ is_ok: boolean, message: string }> {
     const idEvent = param.event_id;
-    const idUser = param?.curr_user ?? 0;
+    const idUser = req?.curr_user ?? 0;
+
+    if (!idUser) {
+      throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     if (!idEvent) {
       throw new HttpException('Не указан id события', HttpStatus.INTERNAL_SERVER_ERROR);

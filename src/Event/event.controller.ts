@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, Req, HttpCode } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto, ListEventDto, UpdateEventDto } from './Dto/event.dto';
 
@@ -30,9 +30,9 @@ export class EventController {
   */
   @Post('create-event')
   @HttpCode(200)
-  async createEvent(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateEventDto,): Promise<string> {
+  async createEvent(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: CreateEventDto,): Promise<string> {
 
-    return await this.eventService.createEvent(data);
+    return await this.eventService.createEvent(data, request.body);
   }
 
   /**
@@ -44,7 +44,7 @@ export class EventController {
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateEventDto,): Promise<{ is_ok: boolean, message: string }> {
 
-    return await this.eventService.updateEvent(data);
+    return await this.eventService.updateEvent(data, request.body);
   }
 
 

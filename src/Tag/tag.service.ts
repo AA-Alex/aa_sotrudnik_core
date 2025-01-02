@@ -72,10 +72,10 @@ export class TagService {
   /**
  * Регистрация пользователя
  */
-  async createTag(param: CreateTagDto): Promise<string> {
+  async createTag(param: CreateTagDto, req: any): Promise<string> {
     param.tag_name = param.tag_name.toLowerCase();
     let sResponse = '';
-    const idUser = param?.curr_user ?? 0;
+    const idUser = req?.curr_user ?? 0;
 
     let vExistTag = await this.tagRepository.findOneBy({ tag_name: param.tag_name });
     if (vExistTag) {
@@ -98,9 +98,9 @@ export class TagService {
   /**
  * Обновить инфо тег
  */
-  async updateTag(param: UpdateTagDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateTag(param: UpdateTagDto, req: any): Promise<{ is_ok: boolean, message: string }> {
     const idTag = param.tag_id;
-    const idUser = param?.curr_user ?? 0;
+    const idUser = req?.curr_user ?? 0;
 
     if (!idTag) {
       throw new HttpException('Не указан id тега', HttpStatus.INTERNAL_SERVER_ERROR);

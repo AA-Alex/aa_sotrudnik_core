@@ -99,7 +99,7 @@ export class UsersService {
   /**
    * Обновить инфо о пользователе
    */
-  async updateUserInfo(param: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateUserInfo(param: UpdateUserInfoDto, req: any): Promise<{ is_ok: boolean, message: string }> {
 
     let isOk = false;
     let sMessage = 'Не удалось обновить информацию о пользователе';
@@ -142,7 +142,7 @@ export class UsersService {
   /**
    * Обновить пароль пользователю
    */
-  async updateUserPassword(param: updateUserPasswordDto): Promise<{ is_ok: boolean, message: string, token: string }> {
+  async updateUserPassword(param: updateUserPasswordDto, req: any): Promise<{ is_ok: boolean, message: string, token: string }> {
 
     let isOk = false;
     let sMessage = 'Не удалось сменить пароль';

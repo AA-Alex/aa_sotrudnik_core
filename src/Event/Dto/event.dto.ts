@@ -31,7 +31,7 @@ export class CreateEventDto {
 
     @IsString()
     @MaxLength(50)
-    comment: string;
+    comment?: string;
 
     curr_user?: number
 }
