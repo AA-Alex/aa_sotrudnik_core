@@ -30,7 +30,7 @@ export class WorkShiftController {
   */
   @Post('create-work-shift')
   @HttpCode(200)
-  async createTag(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: CreateWorkShiftDTO,): Promise<string> {
+  async createWorkShift(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: CreateWorkShiftDTO,): Promise<string> {
 
     return await this.workShiftService.createWorkShift(data, request.body);
   }
