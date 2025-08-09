@@ -42,18 +42,23 @@ export function faAuthSysMiddleware(level: number): any {
                         const vUser = await this.userRepository.findOneBy({ id: parsedUserData.id });
 
                         if (vUser?.token !== sApiKey) {
+                            console.timeEnd('Время запроса: >>')
                             console.log('Токен пользователя устарел!');
                             throw new Error('Токен пользователя устарел!')
                         }
-                        console.log('Текущи пользователь :>> ', `id: ${vUser.id}  name: ${vUser.login}`);
+                        console.log('Текущий пользователь :>> ', `id: ${vUser.id}  name: ${vUser.login}`);
 
                     }
 
                 } catch (e) {
+                    console.timeEnd('Время запроса: >>')
+                    console.log(`Сломалось на проверке JWT\n ${e}`);
                     throw new HttpException('Ошибка сервера!', HttpStatus.INTERNAL_SERVER_ERROR);
                 }
 
                 if (!((parsedUserData?.lvl >= (level ?? 0)) || (parsedUserData?.lvl === 100)) && respStatus !== 500) {
+                    console.timeEnd('Время запроса: >>')
+                    console.log('Сломалось на проверке уровня доступа 1');
                     throw new HttpException('Ошибка доступа', HttpStatus.FORBIDDEN);
                 }
             } else if (level === 0) {
@@ -68,6 +73,8 @@ export function faAuthSysMiddleware(level: number): any {
 
                 next();
             } else {
+                console.timeEnd('Время запроса: >>')
+                console.log('Сломалось на проверке уровня доступа 2');
                 throw new HttpException('Ошибка доступа', HttpStatus.INTERNAL_SERVER_ERROR);
             }
 

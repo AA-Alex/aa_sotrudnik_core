@@ -13,6 +13,9 @@ import { Event } from './Event/Entity/event.entity';
 import { dbConf } from './Config/Config';
 import { UserTag } from './User/Entity/user_tag.entity';
 import { EventModule } from './Event/event.module';
+import { WorkShiftModule } from './WorkShift/work_shift.module';
+import { WorkShift } from './WorkShift/Entity/work_shift.ts.entity';
+import { WorkShiftUser } from './WorkShift/Entity/work_shift_user.entity';
 
 @Module({
   imports: [
@@ -23,14 +26,15 @@ import { EventModule } from './Event/event.module';
       username: dbConf.username,
       password: dbConf.password,
       database: dbConf.database,
-      entities: [User, UserInfo, Tag, UserTag, Event],
+      entities: [User, UserInfo, Tag, UserTag, Event, WorkShift, WorkShiftUser],
       synchronize: true,
     }),
 
     UserModule,
     AdminUserModule,
     TagModule,
-    EventModule
+    EventModule,
+    WorkShiftModule
   ],
   controllers: [AppController],
   providers: [AppService],

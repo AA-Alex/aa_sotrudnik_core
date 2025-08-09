@@ -10,7 +10,7 @@ export class TagController {
   ) {}
 
   /**
-   * Получить данные пользователей (с фильтром и пагинацией)
+   * Получить теги (с фильтром и пагинацией)
    */
   @Post('list-tag')
   @HttpCode(200)
@@ -26,7 +26,7 @@ export class TagController {
   }
 
   /**
-  * Создать пользователя
+  * Создать тег
   */
   @Post('create-tag')
   @HttpCode(200)
@@ -36,7 +36,7 @@ export class TagController {
   }
 
   /**
-  * Обновить пользователя
+  * Обновить тег
   */
   @Post('update-tag')
   @HttpCode(200)

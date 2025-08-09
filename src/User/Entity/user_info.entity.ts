@@ -1,3 +1,4 @@
+import { IsDateString } from 'class-validator';
 import { Entity, PrimaryGeneratedColumn, Column, Unique, Index } from 'typeorm';
 
 @Entity()
@@ -29,5 +30,14 @@ export class UserInfo {
   @Column({ default: '' })
   @Index()
   phone: string;
+
+  @Column({ default: () => "CURRENT_TIMESTAMP" })
+  @IsDateString()
+  created_at: string;
+
+  @Column({ default: () => 'on update current_timestamp()' })
+  @IsDateString()
+  updated_at: string;
+
 
 }
