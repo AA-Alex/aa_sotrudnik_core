@@ -1,0 +1,32 @@
+Ошибка: нет прав доступа к схеме public в PostgreSQL. Проверяю конфигурацию подключения к БД.
+Проблема: у пользователя PostgreSQL alex нет прав на создание объектов в схеме public. TypeORM с synchronize: true пытается создавать таблицы, но получает отказ.
+Решение
+Выдайте пользователю alex права на схему public. Выполните в PostgreSQL от имени суперпользователя (обычно postgres):
+-- Подключитесь к базе данных postgres как суперпользователь-- psql -U postgres -d postgres-- Выдайте права на схему publicGRANT ALL ON SCHEMA public TO alex;GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO alex;GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO alex;-- Для будущих объектовALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO alex;ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO alex;
+Или через командную строку:
+
+sudo -u postgres psql -d postgres -c "GRANT ALL ON SCHEMA public TO alex;"
+sudo -u postgres psql -d postgres -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO alex;"
+sudo -u postgres psql -d postgres -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO alex;"
+sudo -u postgres psql -d postgres -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO alex;"
+sudo -u postgres psql -d postgres -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO alex;"
+
+Альтернативное решение
+Если не хотите менять права, можно указать отдельную схему в конфигурации TypeORM. Добавьте параметр schema в конфигурацию:
+app.module.tsLines 22-31
+    TypeOrmModule.forRoot({
+            type: dbConf.type,
+            host: dbConf.host,
+            port: dbConf.port,
+            username: dbConf.username,
+            password: dbConf.password,
+            database: dbConf.database,
+            entities: [User, UserInfo,
+            Tag, UserTag, Event,
+            WorkShift, WorkShiftUser],
+            synchronize: true,
+            schema: 'public', // можно указать другую схему, если она создана
+                                }),
+Но сначала создайте схему и выдайте права:
+CREATE SCHEMA IF NOT EXISTS myapp_schema;GRANT ALL ON SCHEMA myapp_schema TO alex;
+Рекомендую первый вариант: выдать права на public — это стандартный подход для разработки.

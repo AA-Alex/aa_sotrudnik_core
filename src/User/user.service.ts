@@ -47,8 +47,9 @@ export class UsersService {
       vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
 
       const vUpdateResult = await this.userRepository.save(vUser);
+      const vUpdateResult2 = this.userInfoRepository.save({ user_id: vUser.id, display_name: 'alex' });
 
-      if (vUser && vUpdateResult) {
+      if (vUser && vUpdateResult && vUpdateResult2) {
         message = 'root пользователь создан >>> ОБЯЗАТЕЛЬНО СМЕНИТЕ ПАРОЛЬ В МЕТОДЕ user/update-user-password<<<'
       }
     }
@@ -88,7 +89,7 @@ export class UsersService {
       vUser.token = sToken;
       await Promise.all([
         this.userRepository.save(vUser),
-        this.userInfoRepository.create({ user_id: vUser.id, display_name: vUser.login }),
+        this.userInfoRepository.save({ user_id: vUser.id, display_name: vUser.login }),
       ])
 
     }
@@ -104,7 +105,7 @@ export class UsersService {
     let isOk = false;
     let sMessage = 'Не удалось обновить информацию о пользователе';
 
-    const idUser = param?.curr_user ?? 0;;
+    const idUser = req?.curr_user ?? 0;;
 
     if (!idUser) {
       throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
