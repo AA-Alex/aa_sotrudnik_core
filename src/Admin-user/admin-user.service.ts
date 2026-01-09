@@ -55,39 +55,48 @@ export class AdminUsersService {
     const sLimit = `LIMIT ${param.limit_page}`;
     const sOffset = `OFFSET ${param.page * param.limit_page}`;
 
+    let sWhereOrAnd = 'WHERE';
+
     let sByLogin = 'WHERE u.login IS NOT NULL';
     if (param.login) {
-      sByLogin = `WHERE u.login like('%${param.login}%')`;
+      sByLogin = `${sWhereOrAnd} u.login like('%${param.login}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sByEmail = '';
     if (param.email) {
-      sByLogin = `AND u.email like('%${param.email}%')`;
+      sByLogin = `${sWhereOrAnd} u.email like('%${param.email}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sByName = '';
     if (param.name) {
-      sByLogin = `AND ui.name like('%${param.name}%')`;
+      sByLogin = `${sWhereOrAnd} ui.name like('%${param.name}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sBySurname = '';
     if (param.surname) {
-      sByLogin = `AND ui.surname like('%${param.surname}%')`;
+      sByLogin = `${sWhereOrAnd} ui.surname like('%${param.surname}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sByDisplayName = '';
     if (param.display_name) {
-      sByLogin = `AND ui.display_name like('%${param.display_name}%')`;
+      sByLogin = `${sWhereOrAnd} ui.display_name like('%${param.display_name}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sByPhone = '';
     if (param.phone) {
-      sByLogin = `AND ui.phone like('%${param.phone}%')`;
+      sByLogin = `${sWhereOrAnd} ui.phone like('%${param.phone}%')`;
+      sWhereOrAnd = 'AND';
     }
 
     let sByUserId = '';
     if (param.user_id) {
-      sByLogin = `AND u.id = ${param.user_id}`;
+      sByLogin = `${sWhereOrAnd} u.id = ${param.user_id}`;
+      sWhereOrAnd = 'AND';
     }
 
     const sql = `
@@ -101,7 +110,6 @@ export class AdminUsersService {
     ${sByPhone}
     ${sByUserId}
         `;
-
 
     const sqlSelect = `
     SELECT u.id AS user_id, u.login, u.access_lvl, u.email, ui.display_name, ui.name, ui.surname, ui.fathername, ui.phone 
@@ -206,8 +214,9 @@ export class AdminUsersService {
 
       if (vUserInfo) {
 
+        const sDisplayName = param?.display_name || vUser.login;
         const vUpdateResult = await this.userInfoRepository.update(
-          vUserInfo.id, { user_id: param.user_id, name: param.name, surname: param.surname, fathername: param.fathername, phone: param.phone }
+          vUserInfo.id, { user_id: param.user_id, display_name: sDisplayName, name: param.name, surname: param.surname, fathername: param.fathername, phone: param.phone }
         );
 
         if (vUpdateResult) {
@@ -219,7 +228,7 @@ export class AdminUsersService {
         param.user_id = idUser;
 
         vUser = await this.userRepository.findOneBy({ id: idUser });
-        let sDisplayName = param?.display_name || vUser.login;
+        const sDisplayName = param?.display_name || vUser.login;
 
         vUserInfo = await this.userInfoRepository.save(
           { user_id: param.user_id, display_name: sDisplayName, name: param.name, surname: param.surname, fathername: param.fathername, phone: param.phone }
