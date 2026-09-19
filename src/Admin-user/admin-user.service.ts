@@ -59,37 +59,37 @@ export class AdminUsersService {
 
     let sByLogin = 'WHERE u.login IS NOT NULL';
     if (param.login) {
-      sByLogin = `${sWhereOrAnd} u.login like('%${param.login}%')`;
+      sByLogin = `${sWhereOrAnd} u.login like '%${param.login}%'`;
       sWhereOrAnd = 'AND';
     }
 
     let sByEmail = '';
     if (param.email) {
-      sByLogin = `${sWhereOrAnd} u.email like('%${param.email}%')`;
+      sByEmail = `${sWhereOrAnd} u.email like '%${param.email}%'`;
       sWhereOrAnd = 'AND';
     }
 
     let sByName = '';
     if (param.name) {
-      sByLogin = `${sWhereOrAnd} ui.name like('%${param.name}%')`;
+      sByName = `${sWhereOrAnd} ui.name like '%${param.name}%'`;
       sWhereOrAnd = 'AND';
     }
 
     let sBySurname = '';
     if (param.surname) {
-      sByLogin = `${sWhereOrAnd} ui.surname like('%${param.surname}%')`;
+      sBySurname = `${sWhereOrAnd} ui.surname like '%${param.surname}%'`;
       sWhereOrAnd = 'AND';
     }
 
     let sByDisplayName = '';
     if (param.display_name) {
-      sByLogin = `${sWhereOrAnd} ui.display_name like('%${param.display_name}%')`;
+      sByDisplayName = `${sWhereOrAnd} ui.display_name like '%${param.display_name}%'`;
       sWhereOrAnd = 'AND';
     }
 
     let sByPhone = '';
     if (param.phone) {
-      sByLogin = `${sWhereOrAnd} ui.phone like('%${param.phone}%')`;
+      sByPhone = `${sWhereOrAnd} ui.phone like '%${param.phone}%'`;
       sWhereOrAnd = 'AND';
     }
 
@@ -143,28 +143,43 @@ export class AdminUsersService {
   }
 
   /**
- * Регистрация пользователя
- */
+   * Регистрация пользователя
+   */
   async createUser(param: CreateUserByAdminDto): Promise<{ user: User, user_info: UserInfo }> {
     param.login = param.login.toLowerCase();
     let out: { user: User, user_info: UserInfo } = null;
 
-    let vExistUser = await this.userRepository.findOneBy({ login: param.login });
+    const vExistUser = await this.userRepository.findOneBy({ login: param.login });
     if (vExistUser) {
       throw new HttpException('Пользователь с таким логином уже существует', HttpStatus.FORBIDDEN);
-    } else {
-      param.pswd = bcrypt.hashSync(param.pswd, 13);
-      const vUser = await this.userRepository.save({ ...param, access_lvl: 1 });
-
-      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
-      const [vNewUser, vNewUserInfo] = await Promise.all([
-        this.userRepository.save(vUser),
-        this.userInfoRepository.save({ user_id: vUser.id, display_name: param.surname, surname: param.surname, name: param.name }),
-      ]);
-
-      out = { user: vNewUser, user_info: vNewUserInfo }
-
     }
+
+    param.pswd = bcrypt.hashSync(param.pswd, 13);
+    const vUser = await this.userRepository.save({ ...param, access_lvl: 1 });
+
+    let sUserDisplayName = `${param.surname}_${param.name}`;
+
+    const sql = `
+      SELECT * FROM "user_info"
+        WHERE display_name LIKE '%${sUserDisplayName}%' 
+        ORDER BY id DESC
+        LIMIT 1;
+    `
+    const vExistUserInfo: UserInfo[] = await this.userInfoRepository.query(sql);
+
+    if (vExistUserInfo?.length) {
+      sUserDisplayName = vExistUserInfo[0].display_name + '_';
+    }
+
+    vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
+    const [vNewUser, vNewUserInfo] = await Promise.all([
+      this.userRepository.save(vUser),
+      this.userInfoRepository.save({ user_id: vUser.id, display_name: sUserDisplayName, surname: param.surname, name: param.name }),
+    ]);
+
+    out = { user: vNewUser, user_info: vNewUserInfo }
+
+
 
     return out;
   }

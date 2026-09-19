@@ -3,6 +3,9 @@
 /node_modules
 /build
 /src/Config/Config.ts
+/.gigacode
+/.gigaide
+/.idea
 
 # Logs
 logs
