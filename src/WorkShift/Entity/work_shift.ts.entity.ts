@@ -20,6 +20,10 @@ export class WorkShift {
   @IsInt()
   user_id?: number;
 
+  @Column({ comment: 'Старший смены', nullable: true })
+  @IsInt()
+  master_user_id?: number;
+
   @Column({ comment: 'id события из таблицы event' })
   @IsInt()
   event_id?: number;

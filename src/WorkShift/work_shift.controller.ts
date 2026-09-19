@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
-import { CreateWorkShiftDTO } from './Dto/work_shift.dto';
+import { CreateWorkShiftDTO, WorkShiftDTO, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
 import { WorkShiftService } from './work_shift.service';
 
 @Controller('work-shift')
@@ -12,18 +12,23 @@ export class WorkShiftController {
   /**
    * Получить смены(с фильтром и пагинацией)
    */
-  // @Post('list-work-shift')
-  // @HttpCode(200)
-  // async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListTagDto,): Promise<{
-  //   tag_id: number,
-  //   tag_name: string,
-  //   user_id: number,
-  //   created_at: string,
-  //   updated_at: string,
-  // }[]> {
+  @Post('list-work-shift')
+  @HttpCode(200)
+  async listWorkShift(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: WorkShiftDTO,): Promise<{
+    shift_id: number,
+    call_date_start: string,
+    call_date_end: string,
+    user_id: number,
+    master_user_id: number,
+    event_id: number,
+    comment: string,
+    list_user_id: number[],
+    created_at: string,
+    updated_at: string,
+  }[]> {
 
-  //   return await this.tagService.listTag(data);
-  // }
+    return await this.workShiftService.listWorkShift(data, request.body);
+  }
 
   /**
   * Создать смену
@@ -38,14 +43,14 @@ export class WorkShiftController {
   /**
   * Обновить смену
   */
-  // @Post('update-work-shift')
-  // @HttpCode(200)
-  // async updateUserByAdmin(@Req() request: Request, @Body(
-  //   new ValidationPipe({ skipMissingProperties: true, whitelist: true })
-  // ) data: UpdateTagDto,): Promise<{ is_ok: boolean, message: string }> {
+  @Post('update-work-shift')
+  @HttpCode(200)
+  async updateWorkShift(@Req() request: Request, @Body(
+    new ValidationPipe({ skipMissingProperties: true, whitelist: true })
+  ) data: UpdateWorkShiftDTO,): Promise<{ is_ok: boolean, message: string }> {
 
-  //   return await this.tagService.updateTag(data, request.body);
-  // }
+    return await this.workShiftService.updateWorkShift(data, request.body);
+  }
 
 
 }

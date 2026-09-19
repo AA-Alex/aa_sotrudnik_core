@@ -1,23 +1,26 @@
-import { IsDateString, IsInt, IsString, MaxLength, IsArray } from "class-validator";
+import { IsDateString, IsInt, IsString, MaxLength, IsArray, Max } from "class-validator";
 
 /**
  * Тип для получения смен
  */
 export class WorkShiftDTO {
     @IsInt()
-    id: number;
+    id?: number;
 
     @IsString()
     comment?: string;
 
     @IsInt()
-    user_id: number;
+    user_id?: number;
 
     @IsInt()
-    event_id: number;
+    master_user_id?: number;
+
+    @IsInt()
+    event_id?: number;
 
     @IsDateString()
-    call_date_start: string;
+    call_date_start?: string;
 
     @IsDateString()
     call_date_end?: string;
@@ -29,7 +32,15 @@ export class WorkShiftDTO {
     updated_at?: string;
 
     @IsArray()
-    list_user_id: number[];
+    list_user_id?: number[];
+
+    @IsInt()
+    @Max(10)
+    page?: number;
+
+    @IsInt()
+    @Max(30)
+    limit_page?: number;
 }
 
 /**
@@ -41,6 +52,9 @@ export class CreateWorkShiftDTO {
 
     @IsInt()
     user_id?: number;
+
+    @IsInt()
+    master_user_id?: number;
 
     @IsInt()
     event_id: number;
@@ -60,19 +74,26 @@ export class CreateWorkShiftDTO {
  * Тип для обновления смены
  */
 export class UpdateWorkShiftDTO {
+    @IsInt()
+    shift_id: number;
+
     @IsString()
     comment?: string;
 
     @IsInt()
     @MaxLength(7)
-    user_id: number;
+    user_id?: number;
 
     @IsInt()
     @MaxLength(7)
-    event_id: number;
+    master_user_id?: number;
+
+    @IsInt()
+    @MaxLength(7)
+    event_id?: number;
 
     @IsDateString()
-    call_date_start: string;
+    call_date_start?: string;
 
     @IsDateString()
     call_date_end?: string;

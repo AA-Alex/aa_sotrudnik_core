@@ -17,8 +17,12 @@ import { WorkShiftUser } from './Entity/work_shift_user.entity';
 export class WorkShiftModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
+            .apply(faAuthSysMiddleware(AccessLevelT.registered))
+            .forRoutes('work-shift/list-work-shift');
+
+        consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
-            .forRoutes('work-shift/list-work-shift', 'work-shift/create-work-shift', 'work-shift/update-work-shift');
+            .forRoutes('work-shift/create-work-shift', 'work-shift/update-work-shift');
     }
 }
 
