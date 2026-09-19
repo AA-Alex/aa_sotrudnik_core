@@ -1,5 +1,11 @@
-import { IsDateString, IsInt, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsString, IsEnum } from 'class-validator';
 import { Entity, PrimaryGeneratedColumn, Column, Index, } from 'typeorm';
+
+export enum WorkShiftStatus {
+  enable = 'enable',
+  disable = 'disable',
+  correction = 'correction',
+}
 
 @Entity()
 export class WorkShift {
@@ -31,6 +37,16 @@ export class WorkShift {
   @Column({ comment: 'Не обязательный комментарий к смене', default: '' })
   @IsString()
   comment?: string;
+
+  @Column({
+    type: 'enum',
+    enum: WorkShiftStatus,
+    default: WorkShiftStatus.enable,
+    comment: 'Статус смены',
+  })
+  @IsEnum(WorkShiftStatus)
+  status?: WorkShiftStatus;
+
 
 
   @Column({ default: () => "CURRENT_TIMESTAMP" })

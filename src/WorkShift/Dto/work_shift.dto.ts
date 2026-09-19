@@ -1,4 +1,5 @@
-import { IsDateString, IsInt, IsString, MaxLength, IsArray, Max } from "class-validator";
+import { IsDateString, IsInt, IsString, MaxLength, IsArray, Max, IsEnum } from "class-validator";
+import { WorkShiftStatus } from '../Entity/work_shift.ts.entity';
 
 /**
  * Тип для получения смен
@@ -15,6 +16,9 @@ export class WorkShiftDTO {
 
     @IsInt()
     master_user_id?: number;
+
+    @IsEnum(WorkShiftStatus)
+    status?: WorkShiftStatus;
 
     @IsInt()
     event_id?: number;
@@ -56,6 +60,9 @@ export class CreateWorkShiftDTO {
     @IsInt()
     master_user_id?: number;
 
+    @IsEnum(WorkShiftStatus)
+    status?: WorkShiftStatus;
+
     @IsInt()
     event_id: number;
 
@@ -87,6 +94,9 @@ export class UpdateWorkShiftDTO {
     @IsInt()
     @MaxLength(7)
     master_user_id?: number;
+
+    @IsEnum(WorkShiftStatus)
+    status?: WorkShiftStatus;
 
     @IsInt()
     @MaxLength(7)

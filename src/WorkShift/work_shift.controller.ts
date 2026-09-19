@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { CreateWorkShiftDTO, WorkShiftDTO, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
+import { WorkShiftStatus } from './Entity/work_shift.ts.entity';
 import { WorkShiftService } from './work_shift.service';
 
 @Controller('work-shift')
@@ -20,11 +21,11 @@ export class WorkShiftController {
     call_date_end: string,
     user_id: number,
     master_user_id: number,
+    status: WorkShiftStatus,
     event_id: number,
     comment: string,
     list_user_id: number[],
-    created_at: string,
-    updated_at: string,
+
   }[]> {
 
     return await this.workShiftService.listWorkShift(data, request.body);

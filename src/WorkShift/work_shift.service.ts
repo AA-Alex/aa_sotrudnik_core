@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { WorkShiftDTO, CreateWorkShiftDTO, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
+import { WorkShiftStatus } from './Entity/work_shift.ts.entity';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { WorkShift } from './Entity/work_shift.ts.entity';
@@ -30,11 +31,10 @@ export class WorkShiftService {
     call_date_end: string,
     user_id: number,
     master_user_id: number,
+    status: WorkShiftStatus,
     event_id: number,
     comment: string,
     list_user_id: number[],
-    created_at: string,
-    updated_at: string,
   }[]> {
 
     if (!param.page) param.page = 0;
@@ -67,14 +67,14 @@ export class WorkShiftService {
            ws.call_date_end,
            ws.user_id,
            ws.master_user_id,
+           ws.status,
            ws.event_id,
            ws.comment,
-           ws.created_at,
-           ws.updated_at,
            COALESCE(json_agg(DISTINCT wsu.user_id) FILTER (WHERE wsu.user_id IS NOT NULL), '[]') as list_user_id
     FROM "work_shift" ws
     INNER JOIN "work_shift_user" wsu ON wsu.work_shift_id = ws.id
     WHERE wsu.user_id = ${idCurrUser}
+      AND ws.status != '${WorkShiftStatus.disable}'
     ${sByCallDateStart}
     ${sByEventId}
     GROUP BY ws.id
@@ -90,10 +90,9 @@ export class WorkShiftService {
       call_date_end: string,
       user_id: number,
       master_user_id: number,
+      status: WorkShiftStatus,
       event_id: number,
       comment: string,
-      created_at: string,
-      updated_at: string,
       list_user_id: string,
     }[] = await this.workShiftRepository.query(sql);
 
@@ -193,12 +192,12 @@ export class WorkShiftService {
     // Готовим данные для обновления смены
     const updateData: Partial<WorkShift> = {};
 
-    if (param.comment !== undefined) {
+    if (param.comment) {
       updateData.comment = param.comment;
     }
-    if (param.master_user_id !== undefined) {
-      updateData.master_user_id = param.master_user_id;
-    }
+
+    updateData.master_user_id = param.master_user_id || idUser;
+
     if (param.event_id) {
       updateData.event_id = param.event_id;
     }
@@ -207,6 +206,9 @@ export class WorkShiftService {
     }
     if (param.call_date_end) {
       updateData.call_date_end = param.call_date_end;
+    }
+    if (param.status) {
+      updateData.status = param.status;
     }
 
     // Обновляем данные смены
