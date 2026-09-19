@@ -171,11 +171,14 @@ export class AdminUsersService {
       sUserDisplayName = vExistUserInfo[0].display_name + '_';
     }
 
-    vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
     const [vNewUser, vNewUserInfo] = await Promise.all([
       this.userRepository.save(vUser),
       this.userInfoRepository.save({ user_id: vUser.id, display_name: sUserDisplayName, surname: param.surname, name: param.name }),
     ]);
+    
+    // Генерируем токен после сохранения, когда id уже присвоен
+    vNewUser.token = this.createNewToken(vNewUser.id, vNewUser.access_lvl);
+    await this.userRepository.save(vNewUser);
 
     out = { user: vNewUser, user_info: vNewUserInfo }
 

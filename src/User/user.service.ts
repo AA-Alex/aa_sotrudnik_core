@@ -44,9 +44,11 @@ export class UsersService {
       const pswd = bcrypt.hashSync('123'); // TODO придумать пароль для прода
       const vUser = this.userRepository.create({ login: 'alex', access_lvl: 100, pswd });
 
-      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
-
       const vUpdateResult = await this.userRepository.save(vUser);
+
+      // Генерируем токен после сохранения, когда id уже присвоен
+      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
+      await this.userRepository.save(vUser);
       const vUpdateResult2 = this.userInfoRepository.save({ user_id: vUser.id, display_name: 'alex' });
 
       if (vUser && vUpdateResult && vUpdateResult2) {
@@ -85,12 +87,11 @@ export class UsersService {
 
       const vUser = await this.userRepository.save(vInsertData);
 
+      // Генерируем токен после сохранения, когда id уже присвоен
       sToken = this.createNewToken(vUser.id, vUser.access_lvl);
-      vUser.token = sToken;
-      await Promise.all([
-        this.userRepository.save(vUser),
-        this.userInfoRepository.save({ user_id: vUser.id, display_name: vUser.login }),
-      ])
+      await this.userRepository.update(vUser.id, { token: sToken });
+
+      await this.userInfoRepository.save({ user_id: vUser.id, display_name: vUser.login });
 
     }
 
