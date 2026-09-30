@@ -17,7 +17,7 @@ export class EventController {
   async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListEventDto,): Promise<{
     event_id: number,
     event_name: string,
-    user_id: number,
+    display_name: string,
     created_at: string,
     updated_at: string,
   }[]> {

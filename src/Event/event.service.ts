@@ -26,7 +26,8 @@ export class EventService {
   async listEvent(param: ListEventDto): Promise<{
     event_id: number,
     event_name: string,
-    user_id: number,
+    display_name: string,
+    comment: string,
     created_at: string,
     updated_at: string,
   }[]> {
@@ -48,8 +49,9 @@ export class EventService {
     }
 
     const sql = `
-    SELECT t.*
+    SELECT t.id as event_id, t.event_name, ui.display_name, t.comment, t.created_at, t.updated_at
     FROM "event" t
+    LEFT JOIN "user_info" ui ON t.user_id = ui.user_id
     ${sByEventName}
     ${sByUserId}
     ORDER BY t.id ASC
@@ -61,7 +63,8 @@ export class EventService {
     const aEventData: {
       event_id: number,
       event_name: string,
-      user_id: number,
+      display_name: string,
+      comment: string,
       created_at: string,
       updated_at: string,
     }[] = await this.eventRepository.query(sql);
