@@ -14,7 +14,7 @@ export class EventController {
    */
   @Post('list-event')
   @HttpCode(200)
-  async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListEventDto,): Promise<{
+  async listEvent(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListEventDto,): Promise<{
     event_id: number,
     event_name: string,
     display_name: string,
@@ -23,6 +23,19 @@ export class EventController {
   }[]> {
 
     return await this.eventService.listEvent(data);
+  }
+
+  /**
+   * Получить все события (для селектора)
+   */
+  @Post('list-all-event')
+  @HttpCode(200)
+  async listAllEvents(@Req() request: Request): Promise<{
+    event_id: number,
+    event_name: string,
+  }[]> {
+
+    return await this.eventService.listAllEvents();
   }
 
   /**

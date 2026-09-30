@@ -175,7 +175,7 @@ export class AdminUsersService {
       this.userRepository.save(vUser),
       this.userInfoRepository.save({ user_id: vUser.id, display_name: sUserDisplayName, surname: param.surname, name: param.name }),
     ]);
-    
+
     // Генерируем токен после сохранения, когда id уже присвоен
     vNewUser.token = this.createNewToken(vNewUser.id, vNewUser.access_lvl);
     await this.userRepository.save(vNewUser);
@@ -308,5 +308,34 @@ export class AdminUsersService {
     }
 
     return sMessage;
+  }
+
+  /**
+  * Получить всех активных пользователей
+  */
+  async listActiveUsers(req: any): Promise<{
+    id: number,
+    login: string,
+    display_name: string,
+    access_lvl: number,
+  }[]> {
+
+
+    const sql = `
+    SELECT u.id, u.login, ui.display_name, u.access_lvl
+    FROM "user" u
+    LEFT JOIN "user_info" ui ON u.id = ui.user_id
+    WHERE u.access_lvl >= 1
+    ORDER BY ui.display_name ASC
+    `;
+
+    const users: {
+      id: number,
+      login: string,
+      display_name: string,
+      access_lvl: number,
+    }[] = await this.userRepository.query(sql);
+
+    return users;
   }
 }

@@ -33,6 +33,7 @@ export class WorkShiftService {
     master_user_id: number,
     status: WorkShiftStatus,
     event_id: number,
+    event_name: string,
     comment: string,
     list_user_id: number[],
   }[]> {
@@ -69,15 +70,17 @@ export class WorkShiftService {
            ws.master_user_id,
            ws.status,
            ws.event_id,
+           e.event_name,
            ws.comment,
            COALESCE(json_agg(DISTINCT wsu.user_id) FILTER (WHERE wsu.user_id IS NOT NULL), '[]') as list_user_id
     FROM "work_shift" ws
+    LEFT JOIN "event" e ON ws.event_id = e.id
     INNER JOIN "work_shift_user" wsu ON wsu.work_shift_id = ws.id
     WHERE wsu.user_id = ${idCurrUser}
       AND ws.status != '${WorkShiftStatus.disable}'
     ${sByCallDateStart}
     ${sByEventId}
-    GROUP BY ws.id
+    GROUP BY ws.id, e.event_name
     ORDER BY ws.id ASC
     ${sOffset}
     ${sLimit}
@@ -92,6 +95,7 @@ export class WorkShiftService {
       master_user_id: number,
       status: WorkShiftStatus,
       event_id: number,
+      event_name: string,
       comment: string,
       list_user_id: string,
     }[] = await this.workShiftRepository.query(sql);
@@ -111,6 +115,12 @@ export class WorkShiftService {
 
     if (!aidUserWorker.length) {
       throw new HttpException('Не указаны сотрудники для вызова', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Проверка на дубликаты сотрудников
+    const uniqueUsers = new Set(aidUserWorker);
+    if (uniqueUsers.size !== aidUserWorker.length) {
+      throw new HttpException('Нельзя вызвать одного сотрудника несколько раз', HttpStatus.FORBIDDEN);
     }
 
     // Валидация ID сотрудников
@@ -219,6 +229,12 @@ export class WorkShiftService {
 
     // Заменяем сотрудников, если указан list_user_id
     if (param.list_user_id && param.list_user_id.length > 0) {
+      // Проверка на дубликаты сотрудников
+      const uniqueUsers = new Set(param.list_user_id);
+      if (uniqueUsers.size !== param.list_user_id.length) {
+        throw new HttpException('Нельзя вызвать одного сотрудника несколько раз', HttpStatus.FORBIDDEN);
+      }
+
       // Удаляем старые записи сотрудников
       await this.workShiftRepositoryUser.delete({ work_shift_id: idShift });
 

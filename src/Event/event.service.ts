@@ -21,6 +21,27 @@ export class EventService {
   ) {}
 
   /**
+   * Получить все события (для селектора)
+   */
+  async listAllEvents(): Promise<{
+    event_id: number,
+    event_name: string,
+  }[]> {
+    const sql = `
+    SELECT t.id as event_id, t.event_name
+    FROM "event" t
+    ORDER BY t.id ASC
+    `;
+
+    const aEventData: {
+      event_id: number,
+      event_name: string,
+    }[] = await this.eventRepository.query(sql);
+
+    return aEventData;
+  }
+
+  /**
   * Получить события
   */
   async listEvent(param: ListEventDto): Promise<{

@@ -76,4 +76,19 @@ export class AdminUsersController {
     return await this.adminUsersService.delUserTag(data);
   }
 
+  /**
+  * Получить всех активных пользователей (для селектора смен)
+  */
+  @Post('list-active-users')
+  @HttpCode(200)
+  async listActiveUsers(@Req() request: Request): Promise<{
+    id: number,
+    login: string,
+    display_name: string,
+    access_lvl: number,
+  }[]> {
+
+    return await this.adminUsersService.listActiveUsers(request);
+  }
+
 }

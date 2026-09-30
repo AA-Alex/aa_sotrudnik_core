@@ -22,6 +22,6 @@ export class AdminUserModule {
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
-            .forRoutes('admin-user/add-user-tag', 'admin-user/del-user-tag');
+            .forRoutes('admin-user/add-user-tag', 'admin-user/del-user-tag', 'admin-user/list-active-users');
     }
 }
