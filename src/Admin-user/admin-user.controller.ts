@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { AdminUsersService } from './admin-user.service';
-import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
+import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto, ListActiveUsersDto } from './Dto/admin-user.dto';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { PaginationI } from 'src/main';
@@ -81,14 +81,20 @@ export class AdminUsersController {
   */
   @Post('list-active-users')
   @HttpCode(200)
-  async listActiveUsers(@Req() request: Request): Promise<{
-    id: number,
-    login: string,
-    display_name: string,
-    access_lvl: number,
-  }[]> {
+  async listActiveUsers(@Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListActiveUsersDto,): Promise<{
+    list_user: {
+      id: number,
+      login: string,
+      display_name: string,
+      surname: string,
+      name: string,
+      access_lvl: number,
+      created_at: string,
+    }[],
+    pagination: PaginationI,
+  }> {
 
-    return await this.adminUsersService.listActiveUsers(request);
+    return await this.adminUsersService.listActiveUsers(data);
   }
 
 }

@@ -5,7 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
-import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto } from './Dto/admin-user.dto';
+import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto, ListActiveUsersDto } from './Dto/admin-user.dto';
 import { secret } from 'src/User/user.service';
 import { UserTag } from 'src/User/Entity/user_tag.entity';
 import { PaginationI } from 'src/main';
@@ -311,31 +311,87 @@ export class AdminUsersService {
   }
 
   /**
-  * Получить всех активных пользователей
+  * Найти активных сотрудников для вызова на смену
   */
-  async listActiveUsers(req: any): Promise<{
-    id: number,
-    login: string,
-    display_name: string,
-    access_lvl: number,
-  }[]> {
-
-
-    const sql = `
-    SELECT u.id, u.login, ui.display_name, u.access_lvl
-    FROM "user" u
-    LEFT JOIN "user_info" ui ON u.id = ui.user_id
-    WHERE u.access_lvl >= 1
-    ORDER BY ui.display_name ASC
-    `;
-
-    const users: {
+  async listActiveUsers(param: ListActiveUsersDto = {}): Promise<{
+    list_user: {
       id: number,
       login: string,
       display_name: string,
+      surname: string,
+      name: string,
       access_lvl: number,
-    }[] = await this.userRepository.query(sql);
+      created_at: string,
+    }[],
+    pagination: PaginationI,
+  }> {
+    const page = Number.isInteger(param.page) && param.page >= 0 ? param.page : 0;
+    const limit = Number.isInteger(param.limit_page) && param.limit_page > 0
+      ? Math.min(param.limit_page, 30)
+      : 30;
 
-    return users;
+    const sortColumns: Record<string, string> = {
+      created_at: 'u.created_at',
+      display_name: 'ui.display_name',
+      access_lvl: 'u.access_lvl',
+    };
+    const sortColumn = sortColumns[param.sort] || 'u.created_at';
+    const direction = param.sort_desc === false ? 'ASC' : 'DESC';
+
+    const where: string[] = ['u.access_lvl >= 1'];
+    const values: Array<string | number> = [];
+
+    if (Number.isInteger(param.access_lvl)) {
+      values.push(param.access_lvl);
+      where.push(`u.access_lvl = $${values.length}`);
+    }
+
+    const search = param.search?.trim();
+    if (search) {
+      const escaped = search.replace(/[\\%_]/g, '\\$&');
+      values.push(`%${escaped}%`);
+      where.push(`(COALESCE(ui.surname, '') ILIKE $${values.length} ESCAPE '\\' OR COALESCE(ui.display_name, '') ILIKE $${values.length} ESCAPE '\\')`);
+    }
+
+    const whereSql = `WHERE ${where.join(' AND ')}`;
+    const fromSql = `FROM "user" u LEFT JOIN user_info ui ON ui.user_id = u.id ${whereSql}`;
+
+    const countRows: { total: number }[] = await this.userRepository.query(
+      `SELECT COUNT(*)::int AS total ${fromSql}`,
+      values,
+    );
+    const total = Number(countRows[0]?.total) || 0;
+
+    const list_user: {
+      id: number,
+      login: string,
+      display_name: string,
+      surname: string,
+      name: string,
+      access_lvl: number,
+      created_at: string,
+    }[] = await this.userRepository.query(
+      `SELECT u.id,
+              u.login,
+              COALESCE(ui.display_name, '') AS display_name,
+              COALESCE(ui.surname, '') AS surname,
+              COALESCE(ui.name, '') AS name,
+              u.access_lvl,
+              u.created_at
+       ${fromSql}
+       ORDER BY ${sortColumn} ${direction}, u.id DESC
+       LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+      [...values, limit, page * limit],
+    );
+
+    return {
+      list_user,
+      pagination: {
+        curr_page: page,
+        page_limit: limit,
+        total,
+        page_total: total ? Math.ceil(total / limit) : 0,
+      },
+    };
   }
 }

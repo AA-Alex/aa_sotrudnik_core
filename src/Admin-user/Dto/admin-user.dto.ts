@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
 
 /**
  * Тип для получения данных пользователей для админа
@@ -120,6 +120,39 @@ export class UpdateUserByAdminDto {
     display_name: string;
 }
 
+
+/**
+ * Поиск сотрудников для вызова на смену
+ */
+export class ListActiveUsersDto {
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    search?: string;
+
+    @IsOptional()
+    @IsInt()
+    access_lvl?: number;
+
+    @IsOptional()
+    @IsIn(['created_at', 'display_name', 'access_lvl'])
+    sort?: 'created_at' | 'display_name' | 'access_lvl';
+
+    @IsOptional()
+    @IsBoolean()
+    sort_desc?: boolean;
+
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    page?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Max(30)
+    limit_page?: number;
+}
 
 /**
  * Тип для добавления тега пользователю
