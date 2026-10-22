@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { AdminUsersService } from './admin-user.service';
-import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto, ListActiveUsersDto } from './Dto/admin-user.dto';
+import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto, ListActiveUsersDto, SetUserTagsDto } from './Dto/admin-user.dto';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { PaginationI } from 'src/main';
@@ -74,6 +74,15 @@ export class AdminUsersController {
   async delUserTag(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserTagDto,): Promise<string> {
 
     return await this.adminUsersService.delUserTag(data);
+  }
+
+  /**
+   * Заменить набор тегов сотрудника
+   */
+  @Post('set-user-tags')
+  @HttpCode(200)
+  async setUserTags(@Body(new ValidationPipe({ whitelist: true })) data: SetUserTagsDto,): Promise<{ is_ok: boolean }> {
+    return await this.adminUsersService.setUserTags(data);
   }
 
   /**

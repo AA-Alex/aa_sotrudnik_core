@@ -1,4 +1,4 @@
-import { IsInt, IsString, Max, MaxLength, Min, } from "class-validator";
+import { IsArray, IsInt, IsString, Max, MaxLength, Min, } from "class-validator";
 
 /**
  * Тип для получения событий
@@ -49,5 +49,18 @@ export class UpdateEventDto {
     event_name: string;
 
     curr_user?: number
+}
+
+/**
+ * Набор тегов события
+ */
+export class SetEventTagsDto {
+    @IsInt()
+    @Min(1)
+    event_id: number;
+
+    @IsArray()
+    @IsInt({ each: true })
+    tag_ids: number[];
 }
 

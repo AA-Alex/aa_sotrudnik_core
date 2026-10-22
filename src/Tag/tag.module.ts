@@ -17,7 +17,11 @@ import { UserInfo } from 'src/User/Entity/user_info.entity';
 export class TagModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
+            .apply(faAuthSysMiddleware(AccessLevelT.registered))
+            .forRoutes('tag/list-tag', 'tag/list-all-tag');
+
+        consumer
             .apply(faAuthSysMiddleware(AccessLevelT.boss))
-            .forRoutes('tag/list-tag', 'tag/create-tag', 'tag/update-tag');
+            .forRoutes('tag/create-tag', 'tag/update-tag');
     }
 }

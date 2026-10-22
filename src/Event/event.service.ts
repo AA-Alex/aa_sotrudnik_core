@@ -1,10 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateEventDto, ListEventDto, UpdateEventDto } from './Dto/event.dto';
+import { CreateEventDto, ListEventDto, SetEventTagsDto, UpdateEventDto } from './Dto/event.dto';
 import { Event } from 'src/Event/Entity/event.entity';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
+import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
 
 
 @Injectable()
@@ -90,15 +91,25 @@ export class EventService {
       updated_at: string,
     }[] = await this.eventRepository.query(sql);
 
-    return aEventData;
+    const tagsByEvent = await loadTagLinks(
+      this.eventRepository,
+      'event_tag',
+      aEventData.map((row) => Number(row.event_id)),
+    );
+
+    return aEventData.map((row) => ({
+      ...row,
+      tags: tagsByEvent.get(Number(row.event_id)) || [],
+    }));
   }
 
   /**
  * Создать событие
  */
-  async createEvent(param: CreateEventDto, req: any): Promise<string> {
+  async createEvent(param: CreateEventDto, req: any): Promise<{ message: string, event_id: number }> {
     param.event_name = param.event_name.toLowerCase();
     let sResponse = '';
+    let eventId = 0;
     const idUser = req?.curr_user ?? 0;
 
     if (!idUser) {
@@ -114,13 +125,14 @@ export class EventService {
 
       if (vEvent?.id) {
         sResponse = 'Событие создано';
+        eventId = vEvent.id;
       } else {
         throw new HttpException('Ошибка при создании события', HttpStatus.INTERNAL_SERVER_ERROR);
 
       }
     }
 
-    return sResponse;
+    return { message: sResponse, event_id: eventId };
   }
 
   /**
@@ -166,5 +178,17 @@ export class EventService {
     }
 
     return { is_ok: isOk, message: sMessage };
+  }
+
+  /**
+   * Заменяет набор тегов события
+   */
+  async setEventTags(param: SetEventTagsDto): Promise<{ is_ok: boolean }> {
+    const event = await this.eventRepository.findOneBy({ id: param.event_id });
+    if (!event) {
+      throw new HttpException('Не удалось найти событие по id', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    await replaceTagLinks(this.eventRepository, 'event_tag', param.event_id, param.tag_ids || []);
+    return { is_ok: true };
   }
 }

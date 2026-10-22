@@ -22,7 +22,7 @@ export class AdminUserModule {
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.admin))
-            .forRoutes('admin-user/create-user', 'admin-user/update-user');
+            .forRoutes('admin-user/create-user', 'admin-user/update-user', 'admin-user/set-user-tags');
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))

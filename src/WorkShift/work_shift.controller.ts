@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwardRef, HttpCode } from '@nestjs/common';
 import { PaginationI } from 'src/main';
-import { CreateWorkShiftDTO, SuggestShiftUserDto, WorkShiftDTO, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
+import { CreateWorkShiftDTO, SetShiftTagsDto, SuggestShiftUserDto, WorkShiftDTO, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
 import { WorkShiftStatus } from './Entity/work_shift.ts.entity';
 import { WorkShiftService } from './work_shift.service';
 
@@ -68,6 +68,15 @@ export class WorkShiftController {
   ) data: UpdateWorkShiftDTO,): Promise<{ is_ok: boolean, message: string }> {
 
     return await this.workShiftService.updateWorkShift(data, request.body);
+  }
+
+  /**
+   * Заменить набор тегов смены
+   */
+  @Post('set-shift-tags')
+  @HttpCode(200)
+  async setShiftTags(@Body(new ValidationPipe({ whitelist: true })) data: SetShiftTagsDto,): Promise<{ is_ok: boolean }> {
+    return await this.workShiftService.setShiftTags(data);
   }
 
 

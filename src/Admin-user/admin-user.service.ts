@@ -9,6 +9,8 @@ import { UserTagDto, CreateUserByAdminDto, ListUserDto, UpdateUserByAdminDto, Li
 import { secret } from 'src/User/user.service';
 import { UserTag } from 'src/User/Entity/user_tag.entity';
 import { PaginationI } from 'src/main';
+import { SetUserTagsDto } from './Dto/admin-user.dto';
+import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
 
 
 @Injectable()
@@ -139,7 +141,19 @@ export class AdminUsersService {
       page_limit: param.limit_page,                      // Всего количество на странице
     };
 
-    return { list_user: aUserData, pagination }
+    const tagsByUser = await loadTagLinks(
+      this.userRepository,
+      'user_tag',
+      aUserData.map((row) => Number(row.user_id)),
+    );
+
+    return {
+      list_user: aUserData.map((row) => ({
+        ...row,
+        tags: tagsByUser.get(Number(row.user_id)) || [],
+      })),
+      pagination,
+    };
   }
 
   /**
@@ -311,8 +325,16 @@ export class AdminUsersService {
   }
 
   /**
-  * Найти активных сотрудников для вызова на смену
-  */
+   * Заменяет набор тегов сотрудника
+   */
+  async setUserTags(param: SetUserTagsDto): Promise<{ is_ok: boolean }> {
+    const user = await this.userRepository.findOneBy({ id: param.user_id });
+    if (!user) {
+      throw new HttpException('Не удалось найти пользователя по id', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    await replaceTagLinks(this.userRepository, 'user_tag', param.user_id, param.tag_ids || []);
+    return { is_ok: true };
+  }
   async listActiveUsers(param: ListActiveUsersDto = {}): Promise<{
     list_user: {
       id: number,

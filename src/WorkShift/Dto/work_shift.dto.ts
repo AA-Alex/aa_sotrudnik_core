@@ -150,3 +150,16 @@ export class UpdateWorkShiftDTO {
     list_user_id?: number[];
 }
 
+/**
+ * Набор тегов смены
+ */
+export class SetShiftTagsDto {
+    @IsInt()
+    @Min(1)
+    shift_id: number;
+
+    @IsArray()
+    @IsInt({ each: true })
+    tag_ids: number[];
+}
+

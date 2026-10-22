@@ -1,13 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { WorkShiftDTO, CreateWorkShiftDTO, SuggestShiftUserDto, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
+import { WorkShiftDTO, CreateWorkShiftDTO, SetShiftTagsDto, SuggestShiftUserDto, UpdateWorkShiftDTO } from './Dto/work_shift.dto';
 import { WorkShiftStatus } from './Entity/work_shift.ts.entity';
 import { PaginationI } from 'src/main';
 import { User } from 'src/User/Entity/user.entity';
 import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { WorkShift } from './Entity/work_shift.ts.entity';
 import { WorkShiftUser } from './Entity/work_shift_user.entity';
+import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
 
 
 @Injectable()
@@ -241,12 +242,19 @@ export class WorkShiftService {
       [...values, limit, page * limit],
     );
 
+    const tagsByShift = await loadTagLinks(
+      this.workShiftRepository,
+      'work_shift_tag',
+      rows.map((row) => Number(row.shift_id)),
+    );
+
     return {
       list_work_shift: rows.map((row) => ({
         ...row,
         list_user_id: Array.isArray(row.list_user_id)
           ? row.list_user_id.map((id) => Number(id)).filter((id) => id > 0)
           : [],
+        tags: tagsByShift.get(Number(row.shift_id)) || [],
       })),
       pagination: {
         curr_page: page,
@@ -409,5 +417,17 @@ export class WorkShiftService {
     sMessage = 'Информация обновлена';
 
     return { is_ok: isOk, message: sMessage };
+  }
+
+  /**
+   * Заменяет набор тегов смены
+   */
+  async setShiftTags(param: SetShiftTagsDto): Promise<{ is_ok: boolean }> {
+    const shift = await this.workShiftRepository.findOneBy({ id: param.shift_id });
+    if (!shift) {
+      throw new HttpException('Смена не найдена', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    await replaceTagLinks(this.workShiftRepository, 'work_shift_tag', param.shift_id, param.tag_ids || []);
+    return { is_ok: true };
   }
 }

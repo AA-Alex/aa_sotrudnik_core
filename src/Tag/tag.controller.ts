@@ -17,12 +17,21 @@ export class TagController {
   async register(@Req() request: Request, @Body(new ValidationPipe({ skipMissingProperties: true, whitelist: true })) data: ListTagDto,): Promise<{
     tag_id: number,
     tag_name: string,
-    user_id: number,
+    display_name: string,
     created_at: string,
     updated_at: string,
   }[]> {
 
     return await this.tagService.listTag(data);
+  }
+
+  /**
+   * Все теги без пагинации, для выбора в карточках
+   */
+  @Post('list-all-tag')
+  @HttpCode(200)
+  async listAllTags(): Promise<{ tag_id: number, tag_name: string }[]> {
+    return await this.tagService.listAllTags();
   }
 
   /**

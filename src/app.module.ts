@@ -12,10 +12,12 @@ import { Event } from './Event/Entity/event.entity';
 
 import { dbConf } from './Config/Config';
 import { UserTag } from './User/Entity/user_tag.entity';
+import { EventTag } from './Event/Entity/event_tag.entity';
 import { EventModule } from './Event/event.module';
 import { WorkShiftModule } from './WorkShift/work_shift.module';
 import { WorkShift } from './WorkShift/Entity/work_shift.ts.entity';
 import { WorkShiftUser } from './WorkShift/Entity/work_shift_user.entity';
+import { WorkShiftTag } from './WorkShift/Entity/work_shift_tag.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { WorkShiftUser } from './WorkShift/Entity/work_shift_user.entity';
       username: dbConf.username,
       password: dbConf.password,
       database: dbConf.database,
-      entities: [User, UserInfo, Tag, UserTag, Event, WorkShift, WorkShiftUser],
+      entities: [User, UserInfo, Tag, UserTag, Event, EventTag, WorkShift, WorkShiftUser, WorkShiftTag],
       synchronize: true,
     }),
 

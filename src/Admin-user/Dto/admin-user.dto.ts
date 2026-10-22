@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
 
 /**
  * Тип для получения данных пользователей для админа
@@ -166,4 +166,17 @@ export class UserTagDto {
     @Min(1)
     tag_id: number
 
+}
+
+/**
+ * Набор тегов сотрудника
+ */
+export class SetUserTagsDto {
+    @IsInt()
+    @Min(1)
+    user_id: number;
+
+    @IsArray()
+    @IsInt({ each: true })
+    tag_ids: number[];
 }

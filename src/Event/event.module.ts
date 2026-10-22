@@ -7,9 +7,10 @@ import { UserInfo } from 'src/User/Entity/user_info.entity';
 import { EventController } from './event.controller';
 import { EventService } from './event.service';
 import { Event } from 'src/Event/Entity/event.entity';
+import { EventTag } from './Entity/event_tag.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Event, User, UserInfo])], // Зачем тут User и UserInfo не понятно, но нест далбаёб без этого ломается.
+    imports: [TypeOrmModule.forFeature([Event, EventTag, User, UserInfo])], // Зачем тут User и UserInfo не понятно, но нест далбаёб без этого ломается.
     controllers: [EventController],
     providers: [EventService],
 })
@@ -22,6 +23,6 @@ export class EventModule {
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
-            .forRoutes('event/create-event', 'event/update-event');
+            .forRoutes('event/create-event', 'event/update-event', 'event/set-event-tags');
     }
 }

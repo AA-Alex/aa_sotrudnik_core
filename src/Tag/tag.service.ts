@@ -26,47 +26,53 @@ export class TagService {
   async listTag(param: ListTagDto): Promise<{
     tag_id: number,
     tag_name: string,
-    user_id: number,
+    display_name: string,
     created_at: string,
     updated_at: string,
   }[]> {
 
-    if (!param.page) param.page = 0;
-    if (!param.limit_page) param.limit_page = 30;
+    const page = Number.isInteger(param?.page) && param.page >= 0 ? param.page : 0;
+    const limit = Number.isInteger(param?.limit_page) && param.limit_page > 0
+      ? Math.min(param.limit_page, 30)
+      : 30;
+    const values: Array<string | number> = [];
+    const where = ['t.tag_name IS NOT NULL'];
 
-    const sLimit = `LIMIT ${param.limit_page}`;
-    const sOffset = `OFFSET ${param.page * param.limit_page}`;
-
-    let sByTagName = 'WHERE t.tag_name IS NOT NULL';
-    if (param.tag_name) {
-      sByTagName = `WHERE t.tag_name like('%${param.tag_name}%')`;
+    const search = param?.tag_name?.trim();
+    if (search) {
+      const escaped = search.replace(/[\\%_]/g, '\\$&');
+      values.push(`%${escaped}%`);
+      where.push(`t.tag_name ILIKE $${values.length} ESCAPE '\\'`);
+    }
+    if (Number.isInteger(param?.user_id) && param.user_id > 0) {
+      values.push(param.user_id);
+      where.push(`t.user_id = $${values.length}`);
     }
 
-    let sByUserId = '';
-    if (param.user_id) {
-      sByUserId = `AND t.user_id = ${param.user_id}`;
-    }
-
+    values.push(limit, page * limit);
     const sql = `
-    SELECT t.*
-    FROM "tag" t
-    ${sByTagName}
-    ${sByUserId}
+    SELECT t.id AS tag_id,
+           t.tag_name,
+           COALESCE(ui.display_name, '') AS display_name,
+           t.created_at,
+           t.updated_at
+    FROM tag t
+    LEFT JOIN user_info ui ON ui.user_id = t.user_id
+    WHERE ${where.join(' AND ')}
     ORDER BY t.id ASC
-    ${sOffset}
-    ${sLimit}
-    ;
+    LIMIT $${values.length - 1} OFFSET $${values.length}
     `;
 
-    const aTagData: {
-      tag_id: number,
-      tag_name: string,
-      user_id: number,
-      created_at: string,
-      updated_at: string,
-    }[] = await this.tagRepository.query(sql);
+    return await this.tagRepository.query(sql, values);
+  }
 
-    return aTagData;
+  /**
+   * Все теги для селекторов.
+   */
+  async listAllTags(): Promise<{ tag_id: number, tag_name: string }[]> {
+    return await this.tagRepository.query(
+      `SELECT id AS tag_id, tag_name FROM tag ORDER BY tag_name ASC`,
+    );
   }
 
   /**
