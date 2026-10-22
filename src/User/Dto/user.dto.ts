@@ -1,4 +1,5 @@
 import { IsEmail, IsInt, IsNumber, isString, IsString, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { TrimEnd } from "src/common/trim-end";
 
 // Список уровней доступа дя пользователей
 export enum AccessLevelT {
@@ -28,9 +29,11 @@ export class UserDto {
     @IsString()
     login?: string;
 
+    @TrimEnd()
     @IsEmail()
     email?: string;
 
+    @TrimEnd()
     @IsString()
     pswd?: string;
 
@@ -48,9 +51,11 @@ export class UserCreateDto {
     @IsString()
     login: string;
 
+    @TrimEnd()
     // @IsEmail()
     email?: string;
 
+    @TrimEnd()
     @IsString()
     pswd: string;
 
@@ -71,6 +76,7 @@ export class RecreateUserTokenDto {
 export class updateUserPasswordDto {
     is_ok: boolean;
 
+    @TrimEnd()
     @IsString()
     @MinLength(6)
     @MaxLength(20)

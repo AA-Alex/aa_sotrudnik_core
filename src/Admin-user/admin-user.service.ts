@@ -162,6 +162,7 @@ export class AdminUsersService {
    */
   async createUser(param: CreateUserByAdminDto, req: any): Promise<{ user: User, user_info: UserInfo }> {
     param.login = param.login.toLowerCase();
+    param.pswd = param.pswd.trimEnd();
     let out: { user: User, user_info: UserInfo } = null;
 
     const vExistUser = await this.userRepository.findOneBy({ login: param.login });
@@ -226,6 +227,9 @@ export class AdminUsersService {
     if (!vUser) {
       throw new HttpException('Не удалось найти пользователя по id', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    if (param.pswd) param.pswd = param.pswd.trimEnd();
+    if (param.email) param.email = param.email.trimEnd();
+    if (param.phone) param.phone = param.phone.trimEnd();
     const actorLevel = await this.currentAccessLevel(req);
     const isSelf = Number(req?.curr_user) === Number(idUser);
     if (Number(vUser.access_lvl) > actorLevel) {

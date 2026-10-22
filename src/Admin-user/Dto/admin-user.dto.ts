@@ -1,4 +1,5 @@
 import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength, ValidateIf } from "class-validator";
+import { TrimEnd } from "src/common/trim-end";
 
 /**
  * Тип для получения данных пользователей для админа
@@ -54,6 +55,7 @@ export class CreateUserByAdminDto {
     @MinLength(3)
     login: string;
 
+    @TrimEnd()
     @IsString()
     @MaxLength(20)
     @MinLength(6)
@@ -89,6 +91,7 @@ export class UpdateUserByAdminDto {
     @MinLength(3)
     login: string;
 
+    @TrimEnd()
     @IsOptional()
     @ValidateIf((dto) => !!dto.pswd)
     @IsString()
@@ -111,9 +114,11 @@ export class UpdateUserByAdminDto {
     @MinLength(3)
     fathername: string;
 
+    @TrimEnd()
     @IsEmail()
     email: string;
 
+    @TrimEnd()
     @IsString()
     @MaxLength(13)
     @MinLength(9)

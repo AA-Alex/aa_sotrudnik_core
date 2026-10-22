@@ -65,6 +65,8 @@ export class UsersService {
    */
   async register(param: UserCreateDto): Promise<{ token: string }> {
     param.login = param.login.toLowerCase();
+    param.pswd = param.pswd.trimEnd();
+    if (param.email) param.email = param.email.trimEnd();
     let sToken: string = null;
 
     let vExistUser = await this.userRepository.findOneBy({ login: param.login });
@@ -112,6 +114,7 @@ export class UsersService {
     if (!idUser) {
       throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    if (param.phone) param.phone = param.phone.trimEnd();
 
     let [vUserInfo, vUser] = await Promise.all([
       this.userInfoRepository.findOneBy({ user_id: idUser }),
@@ -152,6 +155,7 @@ export class UsersService {
     let sNewToken = '';
 
     const idUser = param?.curr_user ?? 0;
+    if (param.pswd) param.pswd = param.pswd.trimEnd();
 
     if (idUser) {
       throw new HttpException('Текущий пользователь не опознан', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -189,6 +193,8 @@ export class UsersService {
    */
   async updateSelfPhone(param: UpdateSelfPhoneDto, req: any): Promise<{ is_ok: boolean }> {
     const idUser = await this.requireSelfId(req);
+    param.phone = param.phone.trimEnd();
+    param.phone_repeat = param.phone_repeat.trimEnd();
     if (param.phone !== param.phone_repeat) {
       throw new HttpException('Телефон и повтор не совпадают', HttpStatus.BAD_REQUEST);
     }
@@ -201,8 +207,8 @@ export class UsersService {
    */
   async updateSelfEmail(param: UpdateSelfEmailDto, req: any): Promise<{ is_ok: boolean }> {
     const idUser = await this.requireSelfId(req);
-    const email = param.email.trim();
-    if (email.toLowerCase() !== param.email_repeat.trim().toLowerCase()) {
+    const email = param.email.trimEnd();
+    if (email.toLowerCase() !== param.email_repeat.trimEnd().toLowerCase()) {
       throw new HttpException('Почта и повтор не совпадают', HttpStatus.BAD_REQUEST);
     }
     const taken: { id: number }[] = await this.userRepository.query(
@@ -221,6 +227,8 @@ export class UsersService {
    */
   async updateSelfPassword(param: UpdateSelfPasswordDto, req: any): Promise<{ is_ok: boolean, token: string }> {
     const idUser = await this.requireSelfId(req);
+    param.pswd = param.pswd.trimEnd();
+    param.pswd_repeat = param.pswd_repeat.trimEnd();
     if (param.pswd !== param.pswd_repeat) {
       throw new HttpException('Пароль и повтор не совпадают', HttpStatus.BAD_REQUEST);
     }
@@ -295,6 +303,7 @@ export class UsersService {
     let sToken = '';
 
     data.login = data.login.toLocaleLowerCase();
+    data.pswd = data.pswd.trimEnd();
     // Получить инфо пользователя
     const userInfo = await this.userRepository.findOneBy({ login: data.login });
 

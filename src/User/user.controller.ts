@@ -47,7 +47,7 @@ export class UsersController {
  */
   @Post('register')
   @HttpCode(200)
-  async register(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserCreateDto,): Promise<{ token: string }> {
+  async register(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UserCreateDto,): Promise<{ token: string }> {
 
     return this.usersService.register(data);
   }
@@ -57,7 +57,7 @@ export class UsersController {
    */
   @Post('login')
   @HttpCode(200)
-  async login(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UserCreateDto,): Promise<{ token: string }> {
+  async login(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UserCreateDto,): Promise<{ token: string }> {
     return this.usersService.logIn(data);
   }
 
@@ -66,7 +66,7 @@ export class UsersController {
  */
   @Post('recreate-user-token')
   @HttpCode(200)
-  async recreateUserToken(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: RecreateUserTokenDto): Promise<{ is_ok: boolean }> {
+  async recreateUserToken(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: RecreateUserTokenDto): Promise<{ is_ok: boolean }> {
 
     const isOk = await this.usersService.recreateUserToken(data.user_id);
     return { is_ok: isOk };
@@ -77,7 +77,7 @@ export class UsersController {
    */
   @Post('update-user-password')
   @HttpCode(200)
-  async updateUserPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: updateUserPasswordDto): Promise<{ is_ok: boolean, message: string, token: string }> {
+  async updateUserPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: updateUserPasswordDto): Promise<{ is_ok: boolean, message: string, token: string }> {
 
     return await this.usersService.updateUserPassword(data, request.body);
   }
@@ -87,26 +87,26 @@ export class UsersController {
  */
   @Post('update-user-info')
   @HttpCode(200)
-  async updateUserInfo(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateUserInfo(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
 
     return await this.usersService.updateUserInfo(data, request.body);
   }
 
   @Post('update-self-phone')
   @HttpCode(200)
-  async updateSelfPhone(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfPhoneDto): Promise<{ is_ok: boolean }> {
+  async updateSelfPhone(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UpdateSelfPhoneDto): Promise<{ is_ok: boolean }> {
     return await this.usersService.updateSelfPhone(data, request.body);
   }
 
   @Post('update-self-email')
   @HttpCode(200)
-  async updateSelfEmail(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfEmailDto): Promise<{ is_ok: boolean }> {
+  async updateSelfEmail(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UpdateSelfEmailDto): Promise<{ is_ok: boolean }> {
     return await this.usersService.updateSelfEmail(data, request.body);
   }
 
   @Post('update-self-password')
   @HttpCode(200)
-  async updateSelfPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfPasswordDto): Promise<{ is_ok: boolean, token: string }> {
+  async updateSelfPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true, transform: true })) data: UpdateSelfPasswordDto): Promise<{ is_ok: boolean, token: string }> {
     return await this.usersService.updateSelfPassword(data, request.body);
   }
 
