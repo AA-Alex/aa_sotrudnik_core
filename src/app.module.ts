@@ -18,6 +18,9 @@ import { WorkShiftModule } from './WorkShift/work_shift.module';
 import { WorkShift } from './WorkShift/Entity/work_shift.ts.entity';
 import { WorkShiftUser } from './WorkShift/Entity/work_shift_user.entity';
 import { WorkShiftTag } from './WorkShift/Entity/work_shift_tag.entity';
+import { FineBonusModule } from './FineBonus/fine_bonus.module';
+import { FineAndBonus } from './FineBonus/Entity/fine_and_bonus.entity';
+import { UserFineBonus } from './FineBonus/Entity/user_fine_bonus.entity';
 
 @Module({
   imports: [
@@ -28,7 +31,7 @@ import { WorkShiftTag } from './WorkShift/Entity/work_shift_tag.entity';
       username: dbConf.username,
       password: dbConf.password,
       database: dbConf.database,
-      entities: [User, UserInfo, Tag, UserTag, Event, EventTag, WorkShift, WorkShiftUser, WorkShiftTag],
+      entities: [User, UserInfo, Tag, UserTag, Event, EventTag, WorkShift, WorkShiftUser, WorkShiftTag, FineAndBonus, UserFineBonus],
       synchronize: true,
     }),
 
@@ -36,7 +39,8 @@ import { WorkShiftTag } from './WorkShift/Entity/work_shift_tag.entity';
     AdminUserModule,
     TagModule,
     EventModule,
-    WorkShiftModule
+    WorkShiftModule,
+    FineBonusModule
   ],
   controllers: [AppController],
   providers: [AppService],
