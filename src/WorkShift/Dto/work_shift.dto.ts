@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsString, MaxLength, IsArray, Max, IsEnum } from "class-validator";
+import { IsBoolean, IsDateString, IsIn, IsInt, IsOptional, IsString, MaxLength, IsArray, Max, IsEnum, Min } from "class-validator";
 import { WorkShiftStatus } from '../Entity/work_shift.ts.entity';
 
 /**
@@ -38,13 +38,51 @@ export class WorkShiftDTO {
     @IsArray()
     list_user_id?: number[];
 
+    @IsOptional()
     @IsInt()
-    @Max(10)
+    @Min(0)
     page?: number;
 
+    @IsOptional()
     @IsInt()
+    @Min(1)
     @Max(30)
     limit_page?: number;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    search_event?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    search_user?: string;
+
+    @IsOptional()
+    @IsInt()
+    access_lvl?: number;
+
+    @IsOptional()
+    @IsIn(['created_at', 'event_name', 'access_lvl'])
+    sort?: 'created_at' | 'event_name' | 'access_lvl';
+
+    @IsOptional()
+    @IsBoolean()
+    sort_desc?: boolean;
+}
+
+/**
+ * Подсказки сотрудников для фильтра смен
+ */
+export class SuggestShiftUserDto {
+    @IsString()
+    @MaxLength(100)
+    search: string;
+
+    @IsOptional()
+    @IsInt()
+    access_lvl?: number;
 }
 
 /**

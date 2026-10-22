@@ -17,8 +17,12 @@ import { UserTag } from 'src/User/Entity/user_tag.entity';
 export class AdminUserModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
+            .apply(faAuthSysMiddleware(AccessLevelT.registered))
+            .forRoutes('admin-user/list-user');
+
+        consumer
             .apply(faAuthSysMiddleware(AccessLevelT.admin))
-            .forRoutes('admin-user/list-user', 'admin-user/create-user', 'admin-user/update-user');
+            .forRoutes('admin-user/create-user', 'admin-user/update-user');
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))

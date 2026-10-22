@@ -18,7 +18,7 @@ export class WorkShiftModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.registered))
-            .forRoutes('work-shift/list-work-shift');
+            .forRoutes('work-shift/list-work-shift', 'work-shift/suggest-shift-users');
 
         consumer
             .apply(faAuthSysMiddleware(AccessLevelT.brigadier))

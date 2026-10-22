@@ -17,7 +17,11 @@ import { Event } from 'src/Event/Entity/event.entity';
 export class EventModule {
     public configure(consumer: MiddlewareConsumer) {
         consumer
-            .apply(faAuthSysMiddleware(AccessLevelT.boss))
-            .forRoutes('event/list-event', 'event/create-event', 'event/update-event');
+            .apply(faAuthSysMiddleware(AccessLevelT.registered))
+            .forRoutes('event/list-event');
+
+        consumer
+            .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
+            .forRoutes('event/create-event', 'event/update-event');
     }
 }
