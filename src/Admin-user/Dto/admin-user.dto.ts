@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength } from "class-validator";
+import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, isString, IsString, Max, MaxLength, Min, MinLength, minLength, ValidateIf } from "class-validator";
 
 /**
  * Тип для получения данных пользователей для админа
@@ -89,10 +89,12 @@ export class UpdateUserByAdminDto {
     @MinLength(3)
     login: string;
 
+    @IsOptional()
+    @ValidateIf((dto) => !!dto.pswd)
     @IsString()
     @MaxLength(20)
     @MinLength(6)
-    pswd: string;
+    pswd?: string;
 
     @IsString()
     @MaxLength(20)

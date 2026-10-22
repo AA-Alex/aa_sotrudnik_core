@@ -2,7 +2,8 @@ import { forwardRef, HttpException, HttpStatus, Inject, Injectable, Req } from '
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './Entity/user.entity';
-import { updateUserPasswordDto, UserCreateDto, UserDto } from './Dto/user.dto';
+import { canChangeOwnPassword, updateUserPasswordDto, UserCreateDto, UserDto } from './Dto/user.dto';
+import { UpdateSelfEmailDto, UpdateSelfPasswordDto, UpdateSelfPhoneDto } from './Dto/user_self.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { UserInfo } from './Entity/user_info.entity';
@@ -181,6 +182,85 @@ export class UsersService {
     }
 
     return { is_ok: isOk, message: sMessage, token: sNewToken };
+  }
+
+  /**
+   * Телефон текущего пользователя. Новое значение вводится дважды.
+   */
+  async updateSelfPhone(param: UpdateSelfPhoneDto, req: any): Promise<{ is_ok: boolean }> {
+    const idUser = await this.requireSelfId(req);
+    if (param.phone !== param.phone_repeat) {
+      throw new HttpException('Телефон и повтор не совпадают', HttpStatus.BAD_REQUEST);
+    }
+    await this.saveSelfPhone(idUser, param.phone);
+    return { is_ok: true };
+  }
+
+  /**
+   * Почта текущего пользователя. Новое значение вводится дважды.
+   */
+  async updateSelfEmail(param: UpdateSelfEmailDto, req: any): Promise<{ is_ok: boolean }> {
+    const idUser = await this.requireSelfId(req);
+    const email = param.email.trim();
+    if (email.toLowerCase() !== param.email_repeat.trim().toLowerCase()) {
+      throw new HttpException('Почта и повтор не совпадают', HttpStatus.BAD_REQUEST);
+    }
+    const taken: { id: number }[] = await this.userRepository.query(
+      `SELECT id FROM "user" WHERE lower(email) = lower($1) AND id <> $2 LIMIT 1`,
+      [email, idUser],
+    );
+    if (taken.length) {
+      throw new HttpException('Такая почта уже занята', HttpStatus.FORBIDDEN);
+    }
+    await this.userRepository.update(idUser, { email });
+    return { is_ok: true };
+  }
+
+  /**
+   * Пароль текущего пользователя. Новое значение вводится дважды.
+   */
+  async updateSelfPassword(param: UpdateSelfPasswordDto, req: any): Promise<{ is_ok: boolean, token: string }> {
+    const idUser = await this.requireSelfId(req);
+    if (param.pswd !== param.pswd_repeat) {
+      throw new HttpException('Пароль и повтор не совпадают', HttpStatus.BAD_REQUEST);
+    }
+    const user = await this.userRepository.findOneBy({ id: idUser });
+    if (!user) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
+    }
+    if (!canChangeOwnPassword(Number(user.access_lvl))) {
+      throw new HttpException('Нельзя сменить свой пароль', HttpStatus.FORBIDDEN);
+    }
+    const token = this.createNewToken(idUser, user.access_lvl);
+    await this.userRepository.update(idUser, { pswd: bcrypt.hashSync(param.pswd, 13), token });
+    return { is_ok: true, token };
+  }
+
+  private async requireSelfId(req: any): Promise<number> {
+    const idUser = Number(req?.curr_user) || 0;
+    if (!idUser) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
+    }
+    return idUser;
+  }
+
+  private async saveSelfPhone(idUser: number, phone: string): Promise<void> {
+    const [info, user] = await Promise.all([
+      this.userInfoRepository.findOneBy({ user_id: idUser }),
+      this.userRepository.findOneBy({ id: idUser }),
+    ]);
+    if (info) {
+      await this.userInfoRepository.update(info.id, { phone });
+      return;
+    }
+    await this.userInfoRepository.save({
+      user_id: idUser,
+      phone,
+      display_name: user?.login || `user_${idUser}`,
+      name: '',
+      surname: '',
+      fathername: '',
+    });
   }
 
   /**

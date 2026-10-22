@@ -11,7 +11,7 @@ import { UserTag } from 'src/User/Entity/user_tag.entity';
 import { PaginationI } from 'src/main';
 import { SetUserTagsDto } from './Dto/admin-user.dto';
 import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
-import { AccessLevelT } from 'src/User/Dto/user.dto';
+import { AccessLevelT, canChangeOwnPassword } from 'src/User/Dto/user.dto';
 
 
 @Injectable()
@@ -209,7 +209,7 @@ export class AdminUsersService {
   /**
  * Обновить инфо о пользователе
  */
-  async updateUserInfo(param: UpdateUserByAdminDto, req: any): Promise<{ is_ok: boolean, message: string }> {
+  async updateUserInfo(param: UpdateUserByAdminDto, req: any): Promise<{ is_ok: boolean, message: string, token?: string }> {
     if (!param.user_id) {
       throw new HttpException('Не указан id пользователя', HttpStatus.FORBIDDEN);
     }
@@ -227,10 +227,19 @@ export class AdminUsersService {
       throw new HttpException('Не удалось найти пользователя по id', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     const actorLevel = await this.currentAccessLevel(req);
+    const isSelf = Number(req?.curr_user) === Number(idUser);
     if (Number(vUser.access_lvl) > actorLevel) {
       throw new HttpException('Нельзя изменить пользователя с доступом выше вашего', HttpStatus.FORBIDDEN);
     }
     this.assertGrantable(actorLevel, param.access_lvl);
+    if (param.pswd) {
+      if (isSelf && !canChangeOwnPassword(actorLevel)) {
+        throw new HttpException('Нельзя сменить свой пароль', HttpStatus.FORBIDDEN);
+      }
+      if (!isSelf && Number(vUser.access_lvl) > actorLevel) {
+        throw new HttpException('Нельзя сменить пароль пользователю с доступом выше вашего', HttpStatus.FORBIDDEN);
+      }
+    }
 
     if (param.login) {
       let vExistUser = await this.userRepository.findOneBy({ login: param.login });
@@ -244,23 +253,18 @@ export class AdminUsersService {
 
     if (isOk) {
 
+      const userPatch: { login: string, access_lvl: number, email: string, pswd?: string, token?: string } = {
+        login: param.login,
+        access_lvl: param.access_lvl,
+        email: param.email,
+      };
       if (param.pswd) {
-        param.pswd = bcrypt.hashSync(param.pswd, 13);
-
-        const sNewToken = this.createNewToken(vUser.id, param.access_lvl);
-        await this.userRepository.update(idUser, { login: param.login, access_lvl: param.access_lvl, email: param.email, token: sNewToken });
-
-      } else {
-        const userPatch: { login: string, access_lvl: number, email: string, token?: string } = {
-          login: param.login,
-          access_lvl: param.access_lvl,
-          email: param.email,
-        };
-        if (Number(vUser.access_lvl) !== Number(param.access_lvl)) {
-          userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
-        }
-        await this.userRepository.update(idUser, userPatch);
+        userPatch.pswd = bcrypt.hashSync(param.pswd, 13);
+        userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
+      } else if (Number(vUser.access_lvl) !== Number(param.access_lvl)) {
+        userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
       }
+      await this.userRepository.update(idUser, userPatch);
 
       if (vUserInfo) {
 
@@ -290,7 +294,10 @@ export class AdminUsersService {
       }
     }
 
-    return { is_ok: isOk, message: sMessage };
+    const selfToken = isSelf && param.pswd
+      ? (await this.userRepository.findOneBy({ id: idUser }))?.token
+      : undefined;
+    return { is_ok: isOk, message: sMessage, ...(selfToken ? { token: selfToken } : {}) };
   }
 
   /**

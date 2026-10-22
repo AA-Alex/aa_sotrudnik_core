@@ -13,6 +13,11 @@ export enum AccessLevelT {
     banned = -1, // забанен
 }
 
+/** Свой пароль: бригадир и ниже, а также админ и выше. Между ними смена закрыта. */
+export function canChangeOwnPassword(level: number): boolean {
+    return level <= AccessLevelT.brigadier || level >= AccessLevelT.admin;
+}
+
 /**
  * Тип для обновления инфы о пользователе
  */

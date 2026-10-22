@@ -2,6 +2,7 @@ import { Controller, Post, Body, Get, ValidationPipe, Header, Req, Inject, forwa
 import { UsersService } from './user.service';
 import { AccessLevelT, RecreateUserTokenDto, updateUserPasswordDto, UserCreateDto } from './Dto/user.dto';
 import { UpdateUserInfoDto } from './Dto/user_info.dto';
+import { UpdateSelfEmailDto, UpdateSelfPasswordDto, UpdateSelfPhoneDto } from './Dto/user_self.dto';
 import { User } from './Entity/user.entity';
 import { UserInfo } from './Entity/user_info.entity';
 
@@ -89,6 +90,24 @@ export class UsersController {
   async updateUserInfo(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateUserInfoDto): Promise<{ is_ok: boolean, message: string }> {
 
     return await this.usersService.updateUserInfo(data, request.body);
+  }
+
+  @Post('update-self-phone')
+  @HttpCode(200)
+  async updateSelfPhone(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfPhoneDto): Promise<{ is_ok: boolean }> {
+    return await this.usersService.updateSelfPhone(data, request.body);
+  }
+
+  @Post('update-self-email')
+  @HttpCode(200)
+  async updateSelfEmail(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfEmailDto): Promise<{ is_ok: boolean }> {
+    return await this.usersService.updateSelfEmail(data, request.body);
+  }
+
+  @Post('update-self-password')
+  @HttpCode(200)
+  async updateSelfPassword(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: UpdateSelfPasswordDto): Promise<{ is_ok: boolean, token: string }> {
+    return await this.usersService.updateSelfPassword(data, request.body);
   }
 
 
