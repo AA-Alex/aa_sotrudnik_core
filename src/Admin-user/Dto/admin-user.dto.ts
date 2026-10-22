@@ -68,6 +68,12 @@ export class CreateUserByAdminDto {
     @MaxLength(20)
     @MinLength(3)
     surname: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    access_lvl?: number;
 }
 
 /**
@@ -112,7 +118,8 @@ export class UpdateUserByAdminDto {
     phone: string;
 
     @IsInt()
-    @Max(50)
+    @Min(1)
+    @Max(100)
     access_lvl: number;
 
     @IsString()

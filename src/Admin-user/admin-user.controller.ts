@@ -41,7 +41,7 @@ export class AdminUsersController {
   @HttpCode(200)
   async createUserByAdmin(@Req() request: Request, @Body(new ValidationPipe({ whitelist: true })) data: CreateUserByAdminDto,): Promise<{ user: User, user_info: UserInfo }> {
 
-    return await this.adminUsersService.createUser(data);
+    return await this.adminUsersService.createUser(data, request.body);
   }
 
   /**
@@ -53,7 +53,7 @@ export class AdminUsersController {
     new ValidationPipe({ skipMissingProperties: true, whitelist: true })
   ) data: UpdateUserByAdminDto,): Promise<{ is_ok: boolean, message: string }> {
 
-    return await this.adminUsersService.updateUserInfo(data);
+    return await this.adminUsersService.updateUserInfo(data, request.body);
   }
 
   /**

@@ -249,7 +249,9 @@ export class UsersService {
       this.userInfoRepository.findOneBy({ user_id: idCurrUser }),
     ]);
 
-    return { user: vUser, user_info: vUserInfo };
+    const user = { ...vUser };
+    delete user.pswd;
+    return { user, user_info: vUserInfo };
 
   }
 

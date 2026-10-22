@@ -16,13 +16,17 @@ import { FineBonusService } from './fine_bonus.service';
 export class FineBonusModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
+      .apply(faAuthSysMiddleware(AccessLevelT.registered))
       .forRoutes(
         'fine-bonus/list-fine-bonus',
         'fine-bonus/list-all-fine-bonus',
+        'fine-bonus/list-user-fine-bonus',
+      );
+    consumer
+      .apply(faAuthSysMiddleware(AccessLevelT.brigadier))
+      .forRoutes(
         'fine-bonus/create-fine-bonus',
         'fine-bonus/update-fine-bonus',
-        'fine-bonus/list-user-fine-bonus',
         'fine-bonus/create-user-fine-bonus',
         'fine-bonus/update-user-fine-bonus',
       );

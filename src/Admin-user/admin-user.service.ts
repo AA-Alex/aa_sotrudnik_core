@@ -11,6 +11,7 @@ import { UserTag } from 'src/User/Entity/user_tag.entity';
 import { PaginationI } from 'src/main';
 import { SetUserTagsDto } from './Dto/admin-user.dto';
 import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
+import { AccessLevelT } from 'src/User/Dto/user.dto';
 
 
 @Injectable()
@@ -159,7 +160,7 @@ export class AdminUsersService {
   /**
    * Регистрация пользователя
    */
-  async createUser(param: CreateUserByAdminDto): Promise<{ user: User, user_info: UserInfo }> {
+  async createUser(param: CreateUserByAdminDto, req: any): Promise<{ user: User, user_info: UserInfo }> {
     param.login = param.login.toLowerCase();
     let out: { user: User, user_info: UserInfo } = null;
 
@@ -169,7 +170,9 @@ export class AdminUsersService {
     }
 
     param.pswd = bcrypt.hashSync(param.pswd, 13);
-    const vUser = await this.userRepository.save({ ...param, access_lvl: 1 });
+    const accessLvl = Number.isInteger(param.access_lvl) ? param.access_lvl : AccessLevelT.registered;
+    await this.assertCanGrant(req, accessLvl);
+    const vUser = await this.userRepository.save({ ...param, access_lvl: accessLvl });
 
     let sUserDisplayName = `${param.surname}_${param.name}`;
 
@@ -194,7 +197,9 @@ export class AdminUsersService {
     vNewUser.token = this.createNewToken(vNewUser.id, vNewUser.access_lvl);
     await this.userRepository.save(vNewUser);
 
-    out = { user: vNewUser, user_info: vNewUserInfo }
+    const user = { ...vNewUser };
+    delete user.pswd;
+    out = { user, user_info: vNewUserInfo }
 
 
 
@@ -204,7 +209,7 @@ export class AdminUsersService {
   /**
  * Обновить инфо о пользователе
  */
-  async updateUserInfo(param: UpdateUserByAdminDto): Promise<{ is_ok: boolean, message: string }> {
+  async updateUserInfo(param: UpdateUserByAdminDto, req: any): Promise<{ is_ok: boolean, message: string }> {
     if (!param.user_id) {
       throw new HttpException('Не указан id пользователя', HttpStatus.FORBIDDEN);
     }
@@ -221,6 +226,11 @@ export class AdminUsersService {
     if (!vUser) {
       throw new HttpException('Не удалось найти пользователя по id', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    const actorLevel = await this.currentAccessLevel(req);
+    if (Number(vUser.access_lvl) > actorLevel) {
+      throw new HttpException('Нельзя изменить пользователя с доступом выше вашего', HttpStatus.FORBIDDEN);
+    }
+    this.assertGrantable(actorLevel, param.access_lvl);
 
     if (param.login) {
       let vExistUser = await this.userRepository.findOneBy({ login: param.login });
@@ -237,11 +247,19 @@ export class AdminUsersService {
       if (param.pswd) {
         param.pswd = bcrypt.hashSync(param.pswd, 13);
 
-        const sNewToken = this.createNewToken(vUser.id, vUser.access_lvl);
+        const sNewToken = this.createNewToken(vUser.id, param.access_lvl);
         await this.userRepository.update(idUser, { login: param.login, access_lvl: param.access_lvl, email: param.email, token: sNewToken });
 
       } else {
-        await this.userRepository.update(idUser, { login: param.login, access_lvl: param.access_lvl, email: param.email });
+        const userPatch: { login: string, access_lvl: number, email: string, token?: string } = {
+          login: param.login,
+          access_lvl: param.access_lvl,
+          email: param.email,
+        };
+        if (Number(vUser.access_lvl) !== Number(param.access_lvl)) {
+          userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
+        }
+        await this.userRepository.update(idUser, userPatch);
       }
 
       if (vUserInfo) {
@@ -335,6 +353,39 @@ export class AdminUsersService {
     await replaceTagLinks(this.userRepository, 'user_tag', param.user_id, param.tag_ids || []);
     return { is_ok: true };
   }
+  private async currentAccessLevel(req: any): Promise<number> {
+    const id = Number(req?.curr_user) || 0;
+    if (!id) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
+    }
+    const actor = await this.userRepository.findOneBy({ id });
+    if (!actor) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
+    }
+    return Number(actor.access_lvl);
+  }
+
+  private async assertCanGrant(req: any, nextLevel: number): Promise<void> {
+    const actorLevel = await this.currentAccessLevel(req);
+    this.assertGrantable(actorLevel, nextLevel);
+  }
+
+  private assertGrantable(actorLevel: number, nextLevel: number): void {
+    const allowed = [
+      AccessLevelT.registered,
+      AccessLevelT.brigadier,
+      AccessLevelT.boss,
+      AccessLevelT.admin,
+      AccessLevelT.root,
+    ];
+    if (!allowed.includes(nextLevel)) {
+      throw new HttpException('Такой уровень доступа нельзя назначить', HttpStatus.FORBIDDEN);
+    }
+    if (nextLevel > actorLevel) {
+      throw new HttpException('Нельзя выдать доступ выше своего', HttpStatus.FORBIDDEN);
+    }
+  }
+
   async listActiveUsers(param: ListActiveUsersDto = {}): Promise<{
     list_user: {
       id: number,
