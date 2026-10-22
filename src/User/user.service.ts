@@ -253,5 +253,72 @@ export class UsersService {
 
   }
 
+  /**
+   * Смены и штрафы текущего пользователя для главной страницы
+   */
+  async getMyHome(data: { curr_user?: number }): Promise<{
+    upcoming_shifts: { shift_id: number, event_name: string, call_date_start: string, call_date_end: string }[],
+    completed_shifts: { shift_id: number, event_name: string, call_date_start: string, call_date_end: string }[],
+    fines: { id: number, event_name: string, comment: string, created_at: string }[],
+  }> {
+    const userId = Number(data?.curr_user) || 0;
+    if (!userId) {
+      throw new HttpException('Вы не авторизованы', HttpStatus.UNAUTHORIZED);
+    }
+
+    const shiftFrom = `
+      FROM work_shift ws
+      LEFT JOIN event e ON e.id = ws.event_id
+      WHERE (
+        EXISTS (
+          SELECT 1 FROM work_shift_user wsu
+          WHERE wsu.work_shift_id = ws.id AND wsu.user_id = $1
+        )
+        OR ws.master_user_id = $1
+      )
+    `;
+    const endsAt = `GREATEST(
+      ws.call_date_start::timestamp,
+      COALESCE(NULLIF(ws.call_date_end, ''), ws.call_date_start)::timestamp
+    )`;
+    const shiftSelect = `SELECT ws.id AS shift_id,
+              COALESCE(e.event_name, '') AS event_name,
+              COALESCE(ws.call_date_start, '') AS call_date_start,
+              COALESCE(ws.call_date_end, '') AS call_date_end`;
+
+    const upcoming_shifts = await this.userRepository.query(
+      `${shiftSelect}
+       ${shiftFrom}
+         AND ws.status IN ('enable', 'correction')
+         AND ${endsAt} > NOW()
+       ORDER BY ws.call_date_start::timestamp ASC, ws.id ASC
+       LIMIT 10`,
+      [userId],
+    );
+    const completed_shifts = await this.userRepository.query(
+      `${shiftSelect}
+       ${shiftFrom}
+         AND ws.status = 'enable'
+         AND ${endsAt} <= NOW()
+       ORDER BY ${endsAt} DESC, ws.id DESC
+       LIMIT 3`,
+      [userId],
+    );
+    const fines = await this.userRepository.query(
+      `SELECT ufb.id,
+              COALESCE(e.event_name, '') AS event_name,
+              COALESCE(ufb.comment, '') AS comment,
+              ufb.created_at
+       FROM user_fine_bonus ufb
+       LEFT JOIN event e ON e.id = ufb.event_id
+       WHERE ufb.user_id = $1 AND ufb.type = 'fine'
+       ORDER BY ufb.created_at::timestamp DESC, ufb.id DESC
+       LIMIT 5`,
+      [userId],
+    );
+
+    return { upcoming_shifts, completed_shifts, fines };
+  }
+
 
 }

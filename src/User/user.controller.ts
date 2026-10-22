@@ -30,6 +30,15 @@ export class UsersController {
     return this.usersService.getSelfInfo(data);
   }
 
+  /**
+   * Ближайшие и завершённые смены и штрафы текущего пользователя
+   */
+  @Post('my-home')
+  @HttpCode(200)
+  async getMyHome(@Body() data: any) {
+    return this.usersService.getMyHome(data);
+  }
+
 
 
   /**

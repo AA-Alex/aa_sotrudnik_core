@@ -9,7 +9,7 @@ export enum AccessLevelT {
     brigadier = 40,             // Бригадир
 
     noob = 0, // регистрация не завершена
-    registered = 1, // зарегистрирован
+    registered = 1, // сотрудник
     banned = -1, // забанен
 }
 
