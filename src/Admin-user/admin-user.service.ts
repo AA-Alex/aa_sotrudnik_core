@@ -12,6 +12,8 @@ import { PaginationI } from 'src/main';
 import { SetUserTagsDto } from './Dto/admin-user.dto';
 import { loadTagLinks, replaceTagLinks } from 'src/Tag/tag-links';
 import { AccessLevelT, canChangeOwnPassword } from 'src/User/Dto/user.dto';
+import { UserAuthToken } from 'src/User/Entity/user_auth_token.entity';
+import { addAuthToken, replaceAuthTokens } from 'src/common/auth-tokens';
 
 
 @Injectable()
@@ -24,6 +26,8 @@ export class AdminUsersService {
     private userInfoRepository: Repository<UserInfo>,
     @InjectRepository(UserTag)
     private userTagRepository: Repository<UserTag>,
+    @InjectRepository(UserAuthToken)
+    private tokenRepository: Repository<UserAuthToken>,
 
   ) {}
 
@@ -31,7 +35,7 @@ export class AdminUsersService {
  * Создание токена для авторизации
  */
   private createNewToken = (id: number, lvl: number) => {
-    const payload = { id, lvl }
+    const payload = { id, lvl, tid: `${Date.now()}-${Math.random().toString(36).slice(2)}` }
     return jwt.sign(payload, secret, { expiresIn: '3650d' }); // Токен на 10 лет, пока для всех
   }
 
@@ -55,63 +59,31 @@ export class AdminUsersService {
     if (!param.page) param.page = 0;
     if (!param.limit_page) param.limit_page = 2;
 
-    const sLimit = `LIMIT ${param.limit_page}`;
-    const sOffset = `OFFSET ${param.page * param.limit_page}`;
+    const sLimit = `LIMIT ${Number(param.limit_page)}`;
+    const sOffset = `OFFSET ${Number(param.page) * Number(param.limit_page)}`;
 
-    let sWhereOrAnd = 'WHERE';
-
-    let sByLogin = 'WHERE u.login IS NOT NULL';
-    if (param.login) {
-      sByLogin = `${sWhereOrAnd} u.login like '%${param.login}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sByEmail = '';
-    if (param.email) {
-      sByEmail = `${sWhereOrAnd} u.email like '%${param.email}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sByName = '';
-    if (param.name) {
-      sByName = `${sWhereOrAnd} ui.name like '%${param.name}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sBySurname = '';
-    if (param.surname) {
-      sBySurname = `${sWhereOrAnd} ui.surname like '%${param.surname}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sByDisplayName = '';
-    if (param.display_name) {
-      sByDisplayName = `${sWhereOrAnd} ui.display_name like '%${param.display_name}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sByPhone = '';
-    if (param.phone) {
-      sByPhone = `${sWhereOrAnd} ui.phone like '%${param.phone}%'`;
-      sWhereOrAnd = 'AND';
-    }
-
-    let sByUserId = '';
+    const conditions: string[] = ['u.login IS NOT NULL'];
+    const values: Array<string | number> = [];
+    const addLike = (column: string, value?: string) => {
+      if (!value) return;
+      values.push(`%${value}%`);
+      conditions.push(`${column} ILIKE $${values.length}`);
+    };
+    addLike('u.login', param.login);
+    addLike('u.email', param.email);
+    addLike('ui.name', param.name);
+    addLike('ui.surname', param.surname);
+    addLike('ui.display_name', param.display_name);
+    addLike('ui.phone', param.phone);
     if (param.user_id) {
-      sByLogin = `${sWhereOrAnd} u.id = ${param.user_id}`;
-      sWhereOrAnd = 'AND';
+      values.push(Number(param.user_id));
+      conditions.push(`u.id = $${values.length}`);
     }
 
     const sql = `
     FROM "user" u
     LEFT JOIN user_info ui ON ui.user_id = u.id
-    ${sByLogin}
-    ${sByEmail}
-    ${sByName}
-    ${sBySurname}
-    ${sByDisplayName}
-    ${sByPhone}
-    ${sByUserId}
+    WHERE ${conditions.join(' AND ')}
         `;
 
     const sqlSelect = `
@@ -131,9 +103,9 @@ export class AdminUsersService {
       name: string,
       fathername: string,
       phone: string
-    }[] = await this.userRepository.query(sqlSelect);
+    }[] = await this.userRepository.query(sqlSelect, values);
 
-    const iCount: number = (await this.userRepository.query(`SELECT COUNT(u.id) AS cnt ${sql}`))[0]?.cnt ?? 0;
+    const iCount: number = (await this.userRepository.query(`SELECT COUNT(u.id) AS cnt ${sql}`, values))[0]?.cnt ?? 0;
 
     let pagination: PaginationI = {
       curr_page: param.page,                             // Текущая страница
@@ -194,9 +166,11 @@ export class AdminUsersService {
       this.userInfoRepository.save({ user_id: vUser.id, display_name: sUserDisplayName, surname: param.surname, name: param.name }),
     ]);
 
-    // Генерируем токен после сохранения, когда id уже присвоен
-    vNewUser.token = this.createNewToken(vNewUser.id, vNewUser.access_lvl);
-    await this.userRepository.save(vNewUser);
+    await addAuthToken(
+      this.tokenRepository,
+      vNewUser.id,
+      this.createNewToken(vNewUser.id, vNewUser.access_lvl),
+    );
 
     const user = { ...vNewUser };
     delete user.pswd;
@@ -218,6 +192,7 @@ export class AdminUsersService {
 
     let isOk = false;
     let sMessage = 'Не удалось обновить информацию о пользователе';
+    let issuedToken = '';
 
     let [vUserInfo, vUser] = await Promise.all([
       this.userInfoRepository.findOneBy({ user_id: idUser }),
@@ -257,18 +232,21 @@ export class AdminUsersService {
 
     if (isOk) {
 
-      const userPatch: { login: string, access_lvl: number, email: string, pswd?: string, token?: string } = {
+      const userPatch: { login: string, access_lvl: number, email: string, pswd?: string } = {
         login: param.login,
         access_lvl: param.access_lvl,
         email: param.email,
       };
       if (param.pswd) {
         userPatch.pswd = bcrypt.hashSync(param.pswd, 13);
-        userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
+        issuedToken = this.createNewToken(vUser.id, param.access_lvl);
       } else if (Number(vUser.access_lvl) !== Number(param.access_lvl)) {
-        userPatch.token = this.createNewToken(vUser.id, param.access_lvl);
+        issuedToken = this.createNewToken(vUser.id, param.access_lvl);
       }
       await this.userRepository.update(idUser, userPatch);
+      if (issuedToken) {
+        await replaceAuthTokens(this.tokenRepository, idUser, issuedToken);
+      }
 
       if (vUserInfo) {
 
@@ -298,9 +276,7 @@ export class AdminUsersService {
       }
     }
 
-    const selfToken = isSelf && param.pswd
-      ? (await this.userRepository.findOneBy({ id: idUser }))?.token
-      : undefined;
+    const selfToken = isSelf && param.pswd ? issuedToken : undefined;
     return { is_ok: isOk, message: sMessage, ...(selfToken ? { token: selfToken } : {}) };
   }
 

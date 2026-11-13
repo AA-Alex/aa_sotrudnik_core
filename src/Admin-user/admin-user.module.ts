@@ -7,9 +7,10 @@ import { AdminUsersService } from './admin-user.service';
 import { AdminUsersController } from './admin-user.controller';
 import { faAuthSysMiddleware } from 'src/Middleware';
 import { UserTag } from 'src/User/Entity/user_tag.entity';
+import { UserAuthToken } from 'src/User/Entity/user_auth_token.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, UserInfo, UserTag])],
+    imports: [TypeOrmModule.forFeature([User, UserInfo, UserTag, UserAuthToken])],
     controllers: [AdminUsersController],
     providers: [AdminUsersService],
 })

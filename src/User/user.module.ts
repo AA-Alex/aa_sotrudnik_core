@@ -3,12 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './user.controller';
 import { UsersService } from './user.service';
 import { User } from './Entity/user.entity';
+import { UserAuthToken } from './Entity/user_auth_token.entity';
 import { UserInfo } from './Entity/user_info.entity';
 import { AccessLevelT } from './Dto/user.dto';
 import { faAuthSysMiddleware } from 'src/Middleware';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserInfo,])],
+  imports: [TypeOrmModule.forFeature([User, UserInfo, UserAuthToken])],
   controllers: [UsersController],
   providers: [UsersService],
 })

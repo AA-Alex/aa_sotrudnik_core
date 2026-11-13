@@ -19,9 +19,6 @@ export class User {
   pswd: string;
 
   @Column({ nullable: true })
-  token: string;
-
-  @Column({ nullable: true })
   access_lvl?: number;
 
 

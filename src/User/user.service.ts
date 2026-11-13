@@ -1,4 +1,4 @@
-import { forwardRef, HttpException, HttpStatus, Inject, Injectable, Req } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable, OnModuleInit, Req } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './Entity/user.entity';
@@ -7,25 +7,33 @@ import { UpdateSelfEmailDto, UpdateSelfPasswordDto, UpdateSelfPhoneDto } from '.
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { UserInfo } from './Entity/user_info.entity';
+import { UserAuthToken } from './Entity/user_auth_token.entity';
 import { UpdateUserInfoDto } from './Dto/user_info.dto';
+import { addAuthToken, ensureAuthTokenLimit, replaceAuthTokens } from '../common/auth-tokens';
 
 export const secret = 'lsФмъ\\dk*&^счмисмч&*Tjh;(*jkjlo]орориваfJHjhs'; // TODO вынести в конфиг
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
 
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(UserInfo)
     private userInfoRepository: Repository<UserInfo>,
+    @InjectRepository(UserAuthToken)
+    private tokenRepository: Repository<UserAuthToken>,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    await ensureAuthTokenLimit(this.tokenRepository);
+  }
 
   /**
    * Создание токена для авторизации
    */
   private createNewToken = (id: number, lvl: number) => {
-    const payload = { id, lvl }
+    const payload = { id, lvl, tid: `${Date.now()}-${Math.random().toString(36).slice(2)}` }
     return jwt.sign(payload, secret, { expiresIn: '3650d' }); // Токен на 10 лет, пока для всех
   }
 
@@ -47,9 +55,7 @@ export class UsersService {
 
       const vUpdateResult = await this.userRepository.save(vUser);
 
-      // Генерируем токен после сохранения, когда id уже присвоен
-      vUser.token = this.createNewToken(vUser.id, vUser.access_lvl);
-      await this.userRepository.save(vUser);
+      await addAuthToken(this.tokenRepository, vUser.id, this.createNewToken(vUser.id, vUser.access_lvl));
       const vUpdateResult2 = this.userInfoRepository.save({ user_id: vUser.id, display_name: 'alex' });
 
       if (vUser && vUpdateResult && vUpdateResult2) {
@@ -90,9 +96,8 @@ export class UsersService {
 
       const vUser = await this.userRepository.save(vInsertData);
 
-      // Генерируем токен после сохранения, когда id уже присвоен
       sToken = this.createNewToken(vUser.id, vUser.access_lvl);
-      await this.userRepository.update(vUser.id, { token: sToken });
+      await addAuthToken(this.tokenRepository, vUser.id, sToken);
 
       await this.userInfoRepository.save({ user_id: vUser.id, display_name: vUser.login });
 
@@ -174,7 +179,8 @@ export class UsersService {
 
       if (sNewToken) {
 
-        const vUpdateResult = await this.userRepository.update(idUser, { token: sNewToken, pswd: sNewPswd });
+        const vUpdateResult = await this.userRepository.update(idUser, { pswd: sNewPswd });
+        await replaceAuthTokens(this.tokenRepository, idUser, sNewToken);
 
 
         if (vUpdateResult) {
@@ -240,7 +246,8 @@ export class UsersService {
       throw new HttpException('Нельзя сменить свой пароль', HttpStatus.FORBIDDEN);
     }
     const token = this.createNewToken(idUser, user.access_lvl);
-    await this.userRepository.update(idUser, { pswd: bcrypt.hashSync(param.pswd, 13), token });
+    await this.userRepository.update(idUser, { pswd: bcrypt.hashSync(param.pswd, 13) });
+    await replaceAuthTokens(this.tokenRepository, idUser, token);
     return { is_ok: true, token };
   }
 
@@ -282,12 +289,8 @@ export class UsersService {
       const sNewToken = this.createNewToken(idUser, vUser.access_lvl);
 
       if (sNewToken) {
-
-        const vUpdateResult = await this.userRepository.update(idUser, { token: sNewToken });
-
-        if (vUpdateResult) {
-          isOk = true;
-        }
+        await replaceAuthTokens(this.tokenRepository, idUser, sNewToken);
+        isOk = true;
       }
 
     }
@@ -314,7 +317,7 @@ export class UsersService {
 
     if (isCanLogin) {
       sToken = this.createNewToken(userInfo.id, userInfo.access_lvl);
-      await this.userRepository.update(userInfo.id, { token: sToken });
+      await addAuthToken(this.tokenRepository, userInfo.id, sToken);
     }
     if (!sToken) {
       throw new HttpException('Ошибка при вводе логина или пароля', HttpStatus.FORBIDDEN);

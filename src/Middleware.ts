@@ -41,7 +41,13 @@ export function faAuthSysMiddleware(level: number): any {
                     if (parsedUserData?.id) {
                         const vUser = await this.userRepository.findOneBy({ id: parsedUserData.id });
 
-                        if (vUser?.token !== sApiKey) {
+                        const activeTokens: { id: number }[] = vUser
+                            ? await this.userRepository.query(
+                                `SELECT id FROM user_auth_token WHERE user_id = $1 AND token = $2 LIMIT 1`,
+                                [vUser.id, sApiKey],
+                            )
+                            : [];
+                        if (!activeTokens.length) {
                             console.timeEnd('Время запроса: >>')
                             console.log('Токен пользователя устарел!');
                             throw new Error('Токен пользователя устарел!')

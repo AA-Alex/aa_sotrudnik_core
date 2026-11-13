@@ -1,6 +1,7 @@
 import { forwardRef, MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './User/Entity/user.entity';
+import { UserAuthToken } from './User/Entity/user_auth_token.entity';
 import { UserModule } from './User/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -31,7 +32,7 @@ import { UserFineBonus } from './FineBonus/Entity/user_fine_bonus.entity';
       username: dbConf.username,
       password: dbConf.password,
       database: dbConf.database,
-      entities: [User, UserInfo, Tag, UserTag, Event, EventTag, WorkShift, WorkShiftUser, WorkShiftTag, FineAndBonus, UserFineBonus],
+      entities: [User, UserAuthToken, UserInfo, Tag, UserTag, Event, EventTag, WorkShift, WorkShiftUser, WorkShiftTag, FineAndBonus, UserFineBonus],
       synchronize: true,
     }),
 
